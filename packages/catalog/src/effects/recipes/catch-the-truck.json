@@ -1,0 +1,81 @@
+{
+  "id": "catch-the-truck",
+  "approved": true,
+  "approval": {
+    "question": "Ship the 4-second Catch the truck final in Motion's Library in 0.2.2, with no remake?",
+    "words": "ya no voy a recargar... ya lo que tenemos ya lo subimos así",
+    "date": "2026-11-03"
+  },
+  "passed": false,
+  "design": {
+    "unit": {
+      "id": "catch-the-truck",
+      "title": "Catch the truck"
+    },
+    "family": {
+      "id": "effects",
+      "title": "The proposed effects"
+    },
+    "fit": {
+      "by": "area",
+      "edges": "crop"
+    },
+    "setPiece": "A capybara in a 1970s brown suit sprints beside a moving garbage truck on a beach road, throws a trash bag in and grabs the rail.",
+    "cuts": [],
+    "lastFrame": {
+      "shows": "The capybara runs beside the truck, holding its yellow rail with both hands.",
+      "maxLuma": null
+    },
+    "sound": null,
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
+  },
+  "prompt": "A capybara with tall black flat-top hair, wearing a chocolate-brown 1970s suit with wide lapels, a cream turtleneck and brown platform shoes, runs along a coastal road beside a yellow garbage truck, holding a black trash bag in one gloved hand. He swings the bag into the truck, then grabs the truck's yellow rail with both hands as the camera tracks alongside him. The truck bed holds only black trash bags. Wind blows over the sandy dunes under an overcast sky, with the rumble of the truck and footsteps on asphalt.",
+  "photoFrame": "first",
+  "endFrame": {
+    "source": "none"
+  },
+  "midFrame": null,
+  "hold": null,
+  "adapter": null,
+  "seconds": 4,
+  "preview": {
+    "file": "catch-the-truck.mp4",
+    "sha256": "b3fddb64a660901715ee045fabe0d1ebc3c125a07a492673f429b9555730c15e",
+    "bytes": 5881010,
+    "width": 1152,
+    "height": 2048,
+    "runId": "995a06b0-3cb3-4a4a-86ce-130dc62ef38f",
+    "seed": 20261103,
+    "resolution": "1080p",
+    "aspectRatio": "4:7",
+    "workflowHash": "1c6bcceea8e1416dbea258b6636c3983fd45f83ed3a9098298262febe6cac4dc",
+    "model": "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+    "credits": 63.33,
+    "seconds": 242.6,
+    "madeAt": "2026-11-03T05:50:48.935Z"
+  },
+  "proof": null,
+  "guide": {
+    "file": "catch-the-truck.mp4",
+    "sha256": "750906b013c34ab895935cafe092d502f84a7ec28674740499be608066d7cd71",
+    "bytes": 593405,
+    "matte": {
+      "file": "catch-the-truck-matte.mp4",
+      "sha256": "8f4a0aaab3806ec12d200e3e836c4adc8ea66b5a779b80a3b91509a3d96c772a",
+      "bytes": 351583
+    },
+    "width": 512,
+    "height": 896,
+    "frames": 96,
+    "fps": 24
+  },
+  "clip": {
+    "file": "catch-the-truck-clip.mp4",
+    "sha256": "596f0cff74f9698062847e60049b9c82d5d4b9d0f0ed9b25ea3301d642d02d12",
+    "bytes": 1487570
+  }
+}

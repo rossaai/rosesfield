@@ -264,6 +264,7 @@ export const libraryExample = z
     preview: preview.nullable(),
     proof: exampleProof.nullable(),
     guide: exampleGuide.nullable().default(null),
+    clip: heldFile.nullable().default(null),
   })
   .refine(
     (example) =>

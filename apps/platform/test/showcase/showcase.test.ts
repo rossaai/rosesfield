@@ -106,6 +106,9 @@ describe("the showcase", () => {
         row.input === undefined ? [row.file] : [row.file, row.input.file]
       ),
       ...exampleRowsOf(approvedExamples).map((row) => row.file),
+      ...approvedExamples.flatMap((example) =>
+        example.clip === null ? [] : [example.clip.file]
+      ),
       ...templateRowsOf(templates).map((row) => row.file),
     ])
     const bundled = readdirSync(folders[0] ?? "")
@@ -187,6 +190,7 @@ describe("the showcase", () => {
 
   it("gives each app only its own examples", () => {
     expect(showcaseOf("motion").map((item) => item.file)).toEqual([
+      "catch-the-truck.mp4",
       "grab-and-run.mp4",
     ])
     expect(showcaseOf("image")[0]?.file).toBe("flamingo-bus-stop.webp")

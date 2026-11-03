@@ -11,16 +11,59 @@ import {
 import { mediaOf } from "@/showcase/showcase"
 
 describe("the examples an app's Library shows", () => {
-  it("shows Motion's approved example by its name, its need and its result, never its guide", () => {
-    const [grab, ...more] = examplesOf("motion")
-    expect(more).toEqual([])
-    expect(grab).toMatchObject({
-      id: "grab-and-run",
-      name: "Grab and run",
-      aspect: { width: 1152, height: 1792 },
-    })
+  it("shows Motion's approved examples by their names, their needs and their results, never their guides", () => {
+    const shown = examplesOf("motion")
+    expect(
+      shown.map((example) => [example.id, example.name, example.line])
+    ).toEqual([
+      ["catch-the-truck", "Catch the truck", "A character or a person"],
+      [
+        "grab-and-run",
+        "Grab and run",
+        "You, head to knees, facing the camera, phone upright",
+      ],
+    ])
+    const [truck, grab] = shown
+    expect(truck).toMatchObject({ aspect: { width: 1152, height: 2048 } })
+    expect(truck?.src).toBe(mediaOf("catch-the-truck.mp4"))
+    expect(grab).toMatchObject({ aspect: { width: 1152, height: 1792 } })
     expect(grab?.src).toBe(mediaOf("grab-and-run.mp4"))
-    expect(grab?.src).not.toMatch(/guides/)
+    for (const example of shown) {
+      expect(example.src).not.toMatch(/guides/)
+    }
+  })
+
+  it("opens Catch the truck on your own video, with the clip its result was read from in the Video well and no photo, at its 1080p", () => {
+    const clip = mediaOf("catch-the-truck-clip.mp4")
+    expect(clip).not.toBeNull()
+    expect(exampleDraftOf("motion", "catch-the-truck")).toEqual({
+      prompt: "",
+      assetIds: [],
+      characterIds: [],
+      inputs: { example: "own", model: "ltx-2-5-guide", resolution: "1080p" },
+      input: { src: clip, name: "clip" },
+    })
+    expect(
+      examplesOf("motion").find((one) => one.id === "catch-the-truck")?.draft
+    ).toEqual(exampleDraftOf("motion", "catch-the-truck"))
+  })
+
+  it("falls back to the guided recipe when this build holds no clip for the example, the control", () => {
+    const truck = exampleOf("catch-the-truck")
+    const shownOnly = (file: string): string | null =>
+      file === "catch-the-truck-clip.mp4" ? null : mediaOf(file)
+    expect(draftOf(truck, ["1080p"], shownOnly)).toEqual({
+      prompt: "",
+      assetIds: [],
+      characterIds: [],
+      inputs: {
+        example: "catch-the-truck",
+        model: "ltx-2-5-guide",
+        resolution: "1080p",
+      },
+    })
+    expect(draftOf({ ...truck, clip: null }, ["1080p"]).input).toBeUndefined()
+    expect(draftOf(truck, ["1080p"]).inputs?.example).toBe("own")
   })
 
   it("leaves out an example with no result this build holds, the control", () => {

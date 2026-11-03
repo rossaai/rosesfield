@@ -94,11 +94,12 @@ describe("Explore's examples", () => {
     expect(files).not.toContain("showcase-hose-flowers.webp")
   })
 
-  it("alternates an example that stops a visitor with one a person wants to make, from Grab and run on, and ends on AI Influencer's four characters", () => {
+  it("alternates an example that stops a visitor with one a person wants to make, from Motion's two Library examples on, and ends on AI Influencer's four characters", () => {
     const files = feedExamples(showcaseEntries(showcaseItems)).map((entry) =>
       entry.key.replace(/^showcase-/, "")
     )
     expect(files).toEqual([
+      "catch-the-truck.mp4",
       "grab-and-run.mp4",
       "perfume-cutout.webp",
       "goose-throne.mp4",

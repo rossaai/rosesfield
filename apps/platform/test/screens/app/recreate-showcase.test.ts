@@ -2,6 +2,7 @@ import { type Asset, asset } from "@rosesfield/contract"
 import { QueryClient } from "@tanstack/react-query"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { assetQuery } from "@/api/queries"
+import { exampleDraftOf } from "@/catalog/app-examples"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { defaultsOf } from "@/screens/app/app-form"
 import { fillFromDraft } from "@/screens/app/form-fill"
@@ -98,5 +99,42 @@ describe("Recreate on a showcase example", () => {
     expect(String(values.inputs.prompt)).toMatch(
       /^An ordinary smartphone photo taken at night/
     )
+  })
+})
+
+describe("Recreate on Catch the truck", () => {
+  it("opens Motion on your own video, uploads the clip its result was read from into the Video well, and leaves Photos for yours", async () => {
+    const asked: string[] = []
+    vi.stubGlobal("fetch", (url: string) => {
+      asked.push(url)
+      return Promise.resolve(
+        new Response(new Blob(["mp4"], { type: "video/mp4" }))
+      )
+    })
+    const app = findCatalogApp("motion")
+    const draft = exampleDraftOf("motion", "catch-the-truck")
+    if (app === null || draft === null) {
+      throw new Error("Motion offers Catch the truck")
+    }
+    const sent: Blob[] = []
+    const values = await fillFromDraft(
+      new QueryClient(),
+      app,
+      defaultsOf(app),
+      draft,
+      (file) => {
+        sent.push(file)
+        return Promise.resolve(uploaded)
+      }
+    )
+    expect(asked).toEqual([mediaOf("catch-the-truck-clip.mp4")])
+    expect(sent).toHaveLength(1)
+    expect(values.inputs).toMatchObject({
+      example: "own",
+      model: "ltx-2-5-guide",
+      resolution: "1080p",
+      clip: [uploadedId],
+    })
+    expect(values.inputs.photo ?? []).toEqual([])
   })
 })

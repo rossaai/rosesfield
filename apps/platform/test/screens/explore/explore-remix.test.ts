@@ -25,7 +25,7 @@ describe("Explore's examples from Motion's Library", () => {
         ? [example]
         : []
     })
-    expect(shown).toEqual(["grab-and-run"])
+    expect(shown).toEqual(["catch-the-truck", "grab-and-run"])
   })
 
   it("keeps Recreate with its draft on every other result, the control", () => {

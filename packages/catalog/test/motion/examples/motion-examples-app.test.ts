@@ -43,7 +43,11 @@ function choiceOf(inputs: readonly InputDefinition[], name: string): string[] {
 
 describe("Motion's one mode with its Library", () => {
   it("takes your own video by default, or an approved example, and no other", () => {
-    expect(choiceOf(motion.inputs, "example")).toEqual(["own", "grab-and-run"])
+    expect(choiceOf(motion.inputs, "example")).toEqual([
+      "own",
+      "catch-the-truck",
+      "grab-and-run",
+    ])
     expect(
       body.parse({
         inputs: { model: "ltx-2-3-control", photo: [photo], clip: [clip] },
@@ -188,7 +192,7 @@ describe("the examples a server offers", () => {
     expect(offeredExamples(libraryExamples, reach)).toEqual(approvedExamples)
     expect(
       choiceOf(offeredMotionApp(libraryExamples, reach).inputs, "example")
-    ).toEqual(["own", "grab-and-run"])
+    ).toEqual(["own", "catch-the-truck", "grab-and-run"])
   })
 
   it("swaps in Motion with the drafts on the local lock, and leaves the list alone elsewhere", () => {

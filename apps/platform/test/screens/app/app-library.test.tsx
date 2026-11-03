@@ -57,19 +57,29 @@ describe("Motion's Library", () => {
     showLibrary()
     const list = await screen.findByRole("list", { name: "Library" })
     const items = within(list).getAllByRole("listitem")
-    expect(items).toHaveLength(1)
-    expect(within(list).getAllByText("Grab and run").length).toBeGreaterThan(0)
-    expect(list.querySelector("video")?.getAttribute("src")).not.toMatch(
-      /guides/
+    expect(items).toHaveLength(2)
+    expect(within(list).getAllByText("Catch the truck").length).toBeGreaterThan(
+      0
     )
-    const remix = within(list).getByRole("link", { name: /^Recreate$/ })
-    expect(remix.getAttribute("href")).toBe("/apps/motion?example=grab-and-run")
+    expect(within(list).getAllByText("Grab and run").length).toBeGreaterThan(0)
+    for (const video of list.querySelectorAll("video")) {
+      expect(video.getAttribute("src")).not.toMatch(/guides/)
+    }
+    const remixes = within(list).getAllByRole("link", { name: /^Recreate$/ })
+    expect(remixes.map((remix) => remix.getAttribute("href"))).toEqual([
+      "/apps/motion?example=catch-the-truck",
+      "/apps/motion?example=grab-and-run",
+    ])
   })
 
   it("opens Motion on the example when you press Recreate", async () => {
     const router = showLibrary()
     const list = await screen.findByRole("list", { name: "Library" })
-    fireEvent.click(within(list).getByRole("link", { name: /^Recreate$/ }))
+    const [, grab] = within(list).getAllByRole("link", { name: /^Recreate$/ })
+    if (grab === undefined) {
+      throw new Error("Motion's Library shows Grab and run second")
+    }
+    fireEvent.click(grab)
     await waitFor(() =>
       expect(router.state.location.search).toEqual({
         example: "grab-and-run",
