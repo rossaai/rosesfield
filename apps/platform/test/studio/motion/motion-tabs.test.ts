@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import {
   clipRangeOf,
-  graphClipRange,
   graphRestOf,
   heldWellsOf,
   inputsForModel,
@@ -10,92 +9,85 @@ import {
   modelsOfTab,
   restFieldsOf,
   tabOfHash,
-  tabOfModel,
-  tabsOfModel,
+  tabOfTask,
   wellNamesOf,
 } from "@/studio/motion/motion-tabs"
 import {
   catalog,
   graph,
   graphId,
-  guide,
   motionListing,
   mover,
+  swapGraph,
+  swapGraphId,
   swapper,
 } from "./motion-fixtures"
 
 const listing = motionListing()
 
 describe("Motion's tabs", () => {
-  it("lists the graph on both tabs and each Router model on the tab of its task", () => {
-    expect(tabsOfModel(graph)).toEqual(["move", "swap"])
-    expect(tabsOfModel(mover)).toEqual(["move"])
-    expect(tabsOfModel(swapper)).toEqual(["swap"])
+  it("lists each model on the tab of its task: the LTX 2.3 control graph and a mover on Move, the swap graph and a swapper on Swap", () => {
+    expect(tabOfTask(graph)).toBe("move")
+    expect(tabOfTask(mover)).toBe("move")
+    expect(tabOfTask(swapGraph)).toBe("swap")
+    expect(tabOfTask(swapper)).toBe("swap")
     expect(modelsOfTab(catalog, "move").map((one) => one.id)).toEqual([
       graphId,
       mover.id,
     ])
     expect(modelsOfTab(catalog, "swap").map((one) => one.id)).toEqual([
-      graphId,
+      swapGraphId,
       swapper.id,
     ])
   })
 
-  it("keeps a Router model whose schema is not read yet on the tab of its task, with its own wells", () => {
+  it("lists a model on one tab only, so no technique shows as a second row of the same model, the control", () => {
+    const both = [
+      ...modelsOfTab(catalog, "move"),
+      ...modelsOfTab(catalog, "swap"),
+    ]
+    expect(both.map((one) => one.id).sort()).toEqual(
+      catalog.map((one) => one.id).sort()
+    )
+  })
+
+  it("keeps a Router model whose schema is not read yet on the tab of its task", () => {
     const unread = { ...swapper, id: "lab/swap-v2", form: null }
-    expect(tabsOfModel(unread)).toEqual(["swap"])
+    expect(tabOfTask(unread)).toBe("swap")
     expect(modelsOfTab([graph, unread], "move").map((one) => one.id)).toEqual([
       graphId,
     ])
-    expect(clipRangeOf(listing, unread)).not.toEqual(graphClipRange)
   })
 
-  it("keeps the chosen model on a tab that serves it, and moves a model to the tab of its task", () => {
+  it("keeps the chosen model on a tab that serves it, and takes the tab's first model otherwise", () => {
     const swap = modelsOfTab(catalog, "swap")
-    expect(modelForTab(swap, [mover.id, graphId])?.id).toBe(graphId)
+    expect(modelForTab(swap, [mover.id, graphId])?.id).toBe(swapGraphId)
     expect(modelForTab(swap, [swapper.id, graphId])?.id).toBe(swapper.id)
-    expect(tabOfModel(mover, "swap")).toBe("move")
-    expect(tabOfModel(graph, "swap")).toBe("swap")
+    expect(modelForTab([], [graphId])).toBeNull()
   })
 
-  it("opens Swap a character from the old Recast address and Move a photo from any other", () => {
+  it("opens Swap from the old Recast address and Move from any other", () => {
     expect(tabOfHash("swap")).toBe("swap")
     expect(tabOfHash("#swap")).toBe("swap")
     expect(tabOfHash("")).toBe("move")
   })
 })
 
-describe("Follow a guide", () => {
-  it("is the one tab of the depth guide graph, which no other mode lists", () => {
-    expect(tabsOfModel(guide)).toEqual(["guide"])
-    expect(tabOfModel(guide, "move")).toBe("guide")
-    expect(tabOfModel(graph, "guide")).toBe("move")
-    expect(modelsOfTab(catalog, "move").map((one) => one.id)).not.toContain(
-      guide.id
-    )
+describe("the stretch of your video each model takes", () => {
+  it("is the stretch each Motion graph keeps, which trims a longer video: 10 seconds on Move and 5 on Swap", () => {
+    expect(clipRangeOf(graph)).toEqual({ min: 2, max: 10, trims: true })
+    expect(clipRangeOf(swapGraph)).toEqual({ min: 2, max: 5, trims: true })
+    expect(clipRangeOf(null, "ltx-2-5-guide")).toEqual({
+      min: 2,
+      max: 10,
+      trims: true,
+    })
   })
 
-  it("keeps the photo and the video in the same wells, and leaves the clip's sound out", () => {
-    expect(wellNamesOf(listing, guide)).toEqual({
-      clip: "clip",
-      photo: "photo",
-    })
-    expect(clipRangeOf(listing, guide)).toEqual(graphClipRange)
-    expect(graphRestOf(listing, "guide")).toEqual([])
-  })
-
-  it("records the clip's sound as off on a guide run, because the guide graph writes no sound", () => {
-    const wells = { clip: ["guide-1"], photo: ["photo-1"] }
-    const kept = { sound: "on" }
-    expect(inputsForModel(listing, guide, kept, "guide", wells)).toMatchObject({
-      sound: "off",
-      model: guide.id,
-      mode: "guide",
-      clip: ["guide-1"],
-    })
-    expect(inputsForModel(listing, graph, kept, "move", wells)).toMatchObject({
-      sound: "on",
-    })
+  it("is the length a hosted model's schema declares, which it refuses past, and none when it declares none, the control", () => {
+    expect(clipRangeOf(mover)).toEqual({ min: 3, max: 8, trims: false })
+    expect(clipRangeOf(swapper)).toBeNull()
+    expect(clipRangeOf(null)).toBeNull()
   })
 })
 
@@ -109,12 +101,6 @@ describe("Motion's wells for each model", () => {
       clip: "referenceVideo",
       photo: "characterImage",
     })
-  })
-
-  it("takes the length limit the schema declares, and the graph's own otherwise", () => {
-    expect(clipRangeOf(listing, graph)).toEqual(graphClipRange)
-    expect(clipRangeOf(listing, mover)).toEqual({ min: 3, max: 8 })
-    expect(clipRangeOf(listing, swapper)).toBeNull()
   })
 
   it("moves the clip and the photo into the next model's wells and keeps the typed prompt", () => {
@@ -139,7 +125,7 @@ describe("Motion's wells for each model", () => {
     })
     const back = inputsForModel(
       listing,
-      graph,
+      swapGraph,
       hosted,
       "swap",
       heldWellsOf(hosted, wellNamesOf(listing, mover))
@@ -147,9 +133,8 @@ describe("Motion's wells for each model", () => {
     expect(back).toMatchObject({
       clip: ["clip-5s"],
       photo: ["photo-1"],
-      model: graphId,
+      model: swapGraphId,
       mode: "swap",
-      sound: "on",
     })
   })
 

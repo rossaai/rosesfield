@@ -1,9 +1,8 @@
-import { isGuideFit, renderSizeOf } from "@rosesfield/catalog/motion"
 import { formatBytes, formatHundredths, formatSeconds } from "@/copy/format"
 import { tCatalog } from "@/copy/t"
 import { clipMimes } from "@/pieces/use-clip-facts"
 import type { FieldProblem } from "@/screens/app/app-form"
-import { type ClipRange, graphClipRange } from "@/studio/motion/motion-tabs"
+import type { ClipRange } from "@/studio/motion/motion-tabs"
 
 export type MediaFacts = {
   mime: string
@@ -92,9 +91,10 @@ function shownSeconds(exact: number, limit: number): string {
     : formatSeconds(exact)
 }
 
+/** The clip's problem: a file of another kind or over the size, one this browser cannot open, one shorter than the model takes, or one longer than a model that does not trim takes. */
 export function clipProblem(
   facts: MediaFacts,
-  range: ClipRange | null = graphClipRange,
+  range: ClipRange | null,
   name: string = clipInput
 ): FieldProblem | null {
   const problem = fileProblem(facts, clipLimits, name)
@@ -108,7 +108,7 @@ export function clipProblem(
     return null
   }
   const exact = facts.seconds
-  if (exact > range.max + lengthTolerance) {
+  if (exact > range.max + lengthTolerance && !range.trims) {
     return {
       name,
       key: "field.asset.tooLong",
@@ -125,72 +125,22 @@ export function clipProblem(
   return null
 }
 
+/** The stretch Motion keeps of a clip longer than the model takes, or null for a clip it takes whole or refuses. */
+export function trimmedOf(
+  seconds: number | null,
+  range: ClipRange | null
+): { max: number; seconds: string } | null {
+  if (seconds === null || range === null || !range.trims) {
+    return null
+  }
+  return seconds > range.max + lengthTolerance
+    ? { max: range.max, seconds: shownSeconds(seconds, range.max) }
+    : null
+}
+
 export function isLengthProblem(problem: FieldProblem): boolean {
   return (
     problem.key === "field.asset.tooLong" ||
     problem.key === "field.asset.tooShort"
   )
-}
-
-export function examplePhotoProblem(
-  guide: { width: number; height: number },
-  photo: MediaFacts,
-  resolution: string,
-  name: string = photoInput
-): FieldProblem | null {
-  if (photo.width === null || photo.height === null) {
-    return null
-  }
-  const render = renderSizeOf(
-    { width: photo.width, height: photo.height },
-    resolution
-  )
-  if (render === null || isGuideFit(guide, render)) {
-    return null
-  }
-  return {
-    name,
-    key: "field.asset.wrongKind",
-    values: {
-      kinds: tCatalog(
-        guide.height > guide.width
-          ? "motion.input.photo.tall"
-          : "motion.input.photo.wide"
-      ),
-    },
-  }
-}
-
-export function guideShapeProblem(
-  guide: MediaFacts,
-  photo: MediaFacts,
-  resolution: string,
-  name: string = clipInput
-): FieldProblem | null {
-  const { width, height } = guide
-  if (
-    width === null ||
-    height === null ||
-    photo.width === null ||
-    photo.height === null
-  ) {
-    return null
-  }
-  const render = renderSizeOf(
-    { width: photo.width, height: photo.height },
-    resolution
-  )
-  if (render === null || isGuideFit({ width, height }, render)) {
-    return null
-  }
-  return {
-    name,
-    key: "field.asset.wrongShape",
-    values: {
-      width: String(width),
-      height: String(height),
-      fitWidth: String(render.width),
-      fitHeight: String(render.height),
-    },
-  }
 }

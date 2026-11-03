@@ -12,7 +12,7 @@ export {
 export { motionApp } from "#motion/app"
 export {
   ClipLengthRefusedError,
-  isClipLengthFit,
+  isClipLongEnough,
 } from "#motion/clip-length-refused.error"
 export {
   type ClipPlan,
@@ -35,13 +35,7 @@ export {
   frameEditModels,
   frameEditRequestOf,
 } from "#motion/comfy/frame-edit"
-export {
-  type FrameSize,
-  guideCropLimit,
-  guideCropOf,
-  isGuideFit,
-  renderSizeOf,
-} from "#motion/comfy/guide-fit"
+export type { FrameSize } from "#motion/comfy/guide-fit"
 export {
   ltx25GuideInputs,
   ltx25ShortSides,
@@ -115,8 +109,9 @@ export {
   withOfferedExamples,
 } from "#motion/examples/offered-examples"
 export {
+  graphClipRangeOf,
+  graphClipSeconds,
   graphModel,
-  guideModel,
   ltx25GuideModel,
   motionAppId,
   planModel,

@@ -5,7 +5,7 @@ Renders the person in your photo making the movements of your clip, on LTX 2.3 2
 | | |
 |---|---|
 | Workflow id | `motion-ltx-2-3-ic-lora` |
-| Run by | [`motion`](../../packages/catalog/src/motion/), in Move a photo and in Swap a character |
+| Run by | [`motion`](../../packages/catalog/src/motion/), as the model LTX 2.3 on the Move tab |
 | Core model | LTX 2.3 22B distilled, with the LTX 2.3 union control IC-LoRA |
 | Custom node packs | none, every node is a ComfyUI core node |
 | GPU memory | The model files it loads add up to 41.7 GB. |

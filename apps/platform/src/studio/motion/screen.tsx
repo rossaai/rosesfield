@@ -14,7 +14,7 @@ import {
 } from "@/screens/app/column-frame"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { leftOutText } from "@/studio/motion/left-out"
-import { MotionPanel } from "@/studio/motion/motion-panel"
+import { MotionPanel, MotionTabs } from "@/studio/motion/motion-panel"
 import { tabOfHash } from "@/studio/motion/motion-tabs"
 import {
   type MotionState,
@@ -108,6 +108,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       start={state.start}
       onShortcut={state.onShortcut}
       sheet={sheet}
+      tabs={<MotionTabs state={state} />}
       panel={<MotionPanel state={state} />}
       footLeading={<StartOver state={state} />}
       holdsPress={pressStages.includes(state.chain?.stage.stage ?? "idle")}

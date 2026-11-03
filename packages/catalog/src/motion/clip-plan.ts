@@ -33,9 +33,10 @@ export const planFrameSide = 512
 
 const lastFrameMargin = 0.05
 
-/** The times of the frames the plan reads: the first, two in the middle and the last, just before the clip ends. */
+/** The times of the frames the plan reads: the first, two in the middle and the last, just before the stretch Motion keeps ends, so a longer video is read only where it is rendered. */
 export function planFrameTimesOf(seconds: number): number[] {
-  const last = Math.max(0, seconds - lastFrameMargin)
+  const kept = Math.min(seconds, clipPlanLimits.longestSeconds)
+  const last = Math.max(0, kept - lastFrameMargin)
   const count = clipPlanLimits.frames
   return Array.from({ length: count }, (_, at) => (last * at) / (count - 1))
 }

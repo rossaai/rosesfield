@@ -6,7 +6,6 @@ import { readClipBinding } from "#motion/comfy/read-clip-binding"
 import { swapEngine } from "#motion/comfy/swap-ltx-2-3-binding"
 import {
   graphModel,
-  guideModel,
   ltx25GuideModel,
   planModel,
   readClipModel,
@@ -16,8 +15,6 @@ import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 import { apiGraph } from "#workflow-entry.contract"
 
 export const motionWorkflow = "motion-ltx-2-3-ic-lora"
-
-export const guideWorkflow = "motion-guide-ltx-2-3-ic-lora"
 
 export const videoNode = "122"
 
@@ -57,16 +54,10 @@ const poseEngine: EngineBinding = selectBinding({
   },
 })
 
-const guideEngine: EngineBinding = workflowBinding({
-  workflow: guideWorkflow,
-  bindings: motionBindings,
-})
-
 export const motionEngine: EngineBinding = selectBinding({
   input: "model",
   options: {
     [graphModel]: poseEngine,
-    [guideModel]: guideEngine,
     [ltx25GuideModel]: ltx25GuideEngine,
     [swapModel]: swapEngine,
     [readClipModel]: readClipBinding,

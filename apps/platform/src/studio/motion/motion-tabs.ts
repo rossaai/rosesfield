@@ -3,7 +3,7 @@ import {
   lengthOf,
   type ModelField,
 } from "@rosesfield/catalog/comfy"
-import { exampleInput, guideModel } from "@rosesfield/catalog/motion"
+import { exampleInput, graphClipRangeOf } from "@rosesfield/catalog/motion"
 import {
   type AppListing,
   type InputDefinition,
@@ -13,17 +13,17 @@ import { defaultsOf, type FieldValue } from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
 import { hostedDefaults } from "@/screens/app/hosted/hosted-form"
 
-export type MotionTab = "move" | "swap" | "guide"
+/** Motion's two modes: Move, where your video drives your character, and Swap, where one thing in your video becomes yours. */
+export type MotionTab = "move" | "swap"
 
-export type ClipTab = Exclude<MotionTab, "guide">
+export const motionTabs: readonly MotionTab[] = ["move", "swap"]
 
-export const clipTabs: readonly ClipTab[] = ["move", "swap"]
+export const tabKeys: Readonly<Record<MotionTab, string>> = {
+  move: "motion.tab.move",
+  swap: "motion.tab.swap",
+}
 
-export const motionTabs: readonly MotionTab[] = [...clipTabs, "guide"]
-
-export type MotionMode = "clip" | "guide"
-
-export const tabTasks: Readonly<Record<ClipTab, string>> = {
+export const tabTasks: Readonly<Record<MotionTab, string>> = {
   move: "motion-transfer",
   swap: "character-swap",
 }
@@ -33,9 +33,8 @@ export const swapHash = "swap"
 export const modeInput = "mode"
 export const modelInput = "model"
 
-export type ClipRange = { min: number; max: number }
-
-export const graphClipRange: ClipRange = { min: 2, max: 10 }
+/** The seconds a model takes of your video. A Motion graph trims a longer video to its first stretch, and a hosted model refuses it. */
+export type ClipRange = { min: number; max: number; trims: boolean }
 
 export type WellNames = { clip: string; photo: string }
 
@@ -55,29 +54,16 @@ export function isGraph(model: CatalogModel): boolean {
   return model.kind === "graph"
 }
 
-export function isGuideModel(model: CatalogModel): boolean {
-  return isGraph(model) && model.id === guideModel
-}
-
-export function modeOfTab(tab: MotionTab): MotionMode {
-  return tab === "guide" ? "guide" : "clip"
-}
-
-export function tabsOfModel(model: CatalogModel): MotionTab[] {
-  if (isGuideModel(model)) {
-    return ["guide"]
-  }
-  if (isGraph(model)) {
-    return [...clipTabs]
-  }
-  return clipTabs.filter((tab) => tabTasks[tab] === model.task)
+/** The tab of a model's task: Swap for a model that swaps one thing in your video, Move for every other. */
+export function tabOfTask(model: CatalogModel): MotionTab {
+  return model.task === tabTasks.swap ? "swap" : "move"
 }
 
 export function modelsOfTab(
   models: readonly CatalogModel[],
   tab: MotionTab
 ): CatalogModel[] {
-  return models.filter((model) => tabsOfModel(model).includes(tab))
+  return models.filter((model) => tabOfTask(model) === tab)
 }
 
 export function modelForTab(
@@ -128,24 +114,17 @@ export function wellNamesOf(
   }
 }
 
-function graphRangeOf(app: AppListing): ClipRange {
-  const length = app.inputs.find(
-    (input): input is Extract<InputDefinition, { type: "number" }> =>
-      input.type === "number" && input.name === "length"
-  )
-  return length === undefined
-    ? graphClipRange
-    : { min: length.min, max: length.max }
-}
-
+/** The seconds the chosen model takes: the stretch a Motion graph keeps, which trims a longer video, or the length a hosted model's schema declares, which refuses one. Before the model list arrives, the model the form names. */
 export function clipRangeOf(
-  app: AppListing,
-  model: CatalogModel | null
+  model: CatalogModel | null,
+  named = ""
 ): ClipRange | null {
   if (model === null || isGraph(model)) {
-    return graphRangeOf(app)
+    const range = graphClipRangeOf(model?.id ?? named)
+    return range === null ? null : { ...range, trims: true }
   }
-  return lengthOf(model.form ?? [])
+  const length = lengthOf(model.form ?? [])
+  return length === null ? null : { ...length, trims: false }
 }
 
 export function restFieldsOf(model: CatalogModel | null): ModelField[] {
@@ -158,14 +137,7 @@ export function restFieldsOf(model: CatalogModel | null): ModelField[] {
   )
 }
 
-export const soundInput = "sound"
-
-export const soundOff = "off"
-
-export function graphRestOf(
-  app: AppListing,
-  tab: MotionTab = "move"
-): InputDefinition[] {
+export function graphRestOf(app: AppListing): InputDefinition[] {
   const wells = [appInputOf(app, "video"), appInputOf(app, "image")]
   return app.inputs.filter(
     (input) =>
@@ -175,8 +147,7 @@ export function graphRestOf(
       input.type !== "character" &&
       input.name !== modelInput &&
       input.name !== modeInput &&
-      input.name !== exampleInput &&
-      !(tab === "guide" && input.name === soundInput)
+      input.name !== exampleInput
   )
 }
 
@@ -189,6 +160,7 @@ export function heldWellsOf(inputs: Inputs, names: WellNames): HeldWells {
   }
 }
 
+/** The form for a model on a tab, with your clip and photos carried into its wells. */
 export function inputsForModel(
   app: AppListing,
   model: CatalogModel,
@@ -205,11 +177,9 @@ export function inputsForModel(
         kept[input.name] ?? base[input.name],
       ])
     )
-    const silent = isGuideModel(model) ? { [soundInput]: soundOff } : {}
     return {
       ...base,
       ...shared,
-      ...silent,
       [modeInput]: tab,
       [names.clip]: [...wells.clip],
       [names.photo]: [...wells.photo],
@@ -223,15 +193,4 @@ export function inputsForModel(
     [names.photo]: [...wells.photo],
     [modelInput]: model.id,
   }
-}
-
-export function tabOfModel(
-  model: CatalogModel | null,
-  tab: MotionTab
-): MotionTab {
-  if (model === null) {
-    return tab
-  }
-  const tabs = tabsOfModel(model)
-  return tabs.includes(tab) ? tab : (tabs[0] ?? tab)
 }

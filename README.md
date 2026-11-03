@@ -139,7 +139,7 @@ Every run reaches Comfy through the Comfy SDK, `@comfyorg/sdk` 0.5.0, on one Com
 
 ## The VFX workflow, built with LTX
 
-Motion puts the person in your photo in place of the person in your clip, at the same moments, with LTX 2.5 as its video model. You give a clip of 2 to 10 seconds, 1 to 15 photos and a sentence, and press Generate once. The chain runs six steps on Comfy:
+Motion puts the person in your photo in place of the person in your clip, at the same moments, with LTX 2.5 as its video model. You give a clip of 2 seconds or more, up to 15 photos and a sentence, and press Generate once. Motion keeps the first 10 seconds of a longer clip and says so under it. The chain runs six steps on Comfy:
 
 | Step | What runs | What it gives the next step |
 |---|---|---|
@@ -155,7 +155,7 @@ Motion puts the person in your photo in place of the person in your clip, at the
 - Each step is its own run, with its own price in History, and you can open each graph in ComfyUI.
 - An example in Motion's Library runs the same graph on a depth video built in Blender.
 
-Motion's second model, LTX 2.3 swap, redraws only the person and keeps the rest of your clip, in one run:
+Motion's Swap tab runs LTX 2.3 swap, which redraws only the person and keeps the rest of the first 5 seconds of your clip, in one run:
 
 - SAM 3.1 tracks the person you name, and the graph paints them magenta, in blocks, in each frame.
 - Your photo sits in a green panel beside the frames, the layout of Alissonerdx's masked reference inpaint LoRA for LTX 2.3.

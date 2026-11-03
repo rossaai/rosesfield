@@ -5,6 +5,7 @@ import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
 import { listApps } from "#list-apps"
 import { findWorkflow, listWorkflows } from "#list-workflows"
 import { shortSides } from "#motion/comfy/motion-binding"
+import { motionCopy } from "#motion/copy.en"
 import {
   both,
   fileGraph,
@@ -86,7 +87,7 @@ describe("the motion graph", () => {
     )
   })
 
-  it("lists the LTX 2.5 guided render first, then the LTX 2.3 control graph and its depth guide graph, then each Router model named for a task, and no Wan, reference or other video model", () => {
+  it("lists the LTX 2.5 guided render first, then the LTX 2.3 control graph and the LTX 2.3 swap, each a model and never a technique, then each Router model named for a task, and no Wan, reference or other video model", () => {
     const listed = modelsForApp(motion, [
       hosted("wan/wan2.2-animate", ["image", "video"]),
       hosted("higgsfield/higgsfield-genjutsu-motion-transfer-v1.0", [
@@ -100,7 +101,6 @@ describe("the motion graph", () => {
     expect(listed.map((one) => [one.id, one.kind, one.task])).toEqual([
       ["ltx-2-5-guide", "graph", "motion-transfer"],
       ["ltx-2-3-control", "graph", "motion-transfer"],
-      ["ltx-2-3-guide", "graph", "motion-transfer"],
       ["ltx-2-3-swap", "graph", "character-swap"],
       ["kling/kling-v3-motion-control", "hosted", "motion-transfer"],
       ["lab/lab-character-swap-v1", "hosted", "character-swap"],
@@ -108,7 +108,13 @@ describe("the motion graph", () => {
     expect(listed.slice(0, 3).map((one) => one.nameKey)).toEqual([
       "motion.model.ltx25",
       "motion.model.ltx23",
-      "motion.model.ltx23Guide",
+      "motion.model.ltx23",
+    ])
+    expect(motionCopy["motion.model.ltx23"]).toBe("LTX 2.3")
+    expect(listed.slice(0, 3).map((one) => one.maker)).toEqual([
+      "Lightricks",
+      "Lightricks",
+      "Lightricks",
     ])
   })
 

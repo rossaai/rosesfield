@@ -8,13 +8,7 @@ import {
 } from "@rosesfield/catalog/motion"
 import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
 import { useQueryClient } from "@tanstack/react-query"
-import {
-  type KeyboardEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react"
+import { type KeyboardEvent, useCallback, useRef, useState } from "react"
 import { characterQuery } from "@/api/queries"
 import { appName } from "@/catalog/app-facts"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
@@ -25,6 +19,7 @@ import {
   heldValuesOf,
   valuesFromRun,
 } from "@/screens/app/app-form"
+import { textOf } from "@/screens/app/fields/field-props"
 import { modelNameOf } from "@/screens/app/hosted/catalog-picker"
 import { hostedProblems } from "@/screens/app/hosted/hosted-form"
 import {
@@ -39,25 +34,18 @@ import {
   useAppForm,
 } from "@/screens/app/use-app-form"
 import { type StartRun, useStartRun } from "@/screens/app/use-start-run"
-import { isLengthProblem } from "@/studio/motion/motion-checks"
+import { isLengthProblem, trimmedOf } from "@/studio/motion/motion-checks"
 import {
   type ClipRange,
   clipRangeOf,
   graphRestOf,
-  heldWellsOf,
-  inputsForModel,
   isGraph,
   isMotionTab,
-  type MotionMode,
   type MotionTab,
   modeInput,
   modelInput,
-  modeOfTab,
   restFieldsOf,
-  soundInput,
-  soundOff,
-  tabOfModel,
-  tabsOfModel,
+  tabOfTask,
   type WellNames,
   wellNamesOf,
 } from "@/studio/motion/motion-tabs"
@@ -70,6 +58,10 @@ import {
   type MotionChecks,
   useMotionChecks,
 } from "@/studio/motion/use-motion-checks"
+import {
+  useTabHosted,
+  useTabMatchesModel,
+} from "@/studio/motion/use-motion-tab"
 
 export type MotionState = {
   app: AppListing
@@ -78,7 +70,7 @@ export type MotionState = {
   isOwnChain: boolean
   useOwnVideo: () => void
   tab: MotionTab
-  mode: MotionMode
+  setTab: (tab: MotionTab) => void
   form: AppForm
   start: StartRun
   hosted: HostedState
@@ -87,6 +79,7 @@ export type MotionState = {
   range: ClipRange | null
   checks: MotionChecks
   clipMessage: string | null
+  clipNote: string | null
   photoMessage: string | null
   restFields: readonly ModelField[]
   graphRest: readonly InputDefinition[]
@@ -151,33 +144,6 @@ export function tabOf(
   return isMotionTab(value) ? value : fallback
 }
 
-function useModeHosted(
-  app: AppListing,
-  form: AppForm,
-  hosted: HostedState,
-  tab: MotionTab
-): HostedState {
-  const { models, chosen } = hosted
-  const mode = modeOfTab(tab)
-  const choose = (id: string): void => {
-    const next = models.find((one) => one.id === id)
-    if (next !== undefined) {
-      const wells = heldWellsOf(form.values.inputs, wellNamesOf(app, chosen))
-      const { [soundInput]: _sound, ...unsounded } = form.values.inputs
-      form.setForm({
-        inputs: inputsForModel(
-          app,
-          next,
-          mode === "guide" ? unsounded : form.values.inputs,
-          tabOfModel(next, tab),
-          wells
-        ),
-      })
-    }
-  }
-  return { ...hosted, choose }
-}
-
 function useFocusers(): [
   (name: string) => void,
   (name: string, focus: () => void) => void,
@@ -211,33 +177,9 @@ function useCharacterPhoto(
   return [pick, hasFailed]
 }
 
-function useTabOfModel(
-  form: AppForm,
-  chosen: CatalogModel | null,
-  tab: MotionTab
-): void {
-  const { setInput } = form
-  const served = tabOfModel(chosen, tab)
-  useEffect(() => {
-    if (served !== tab) {
-      setInput(modeInput, served)
-    }
-  }, [served, tab, setInput])
-}
-
-function useSilentGuide(form: AppForm, mode: MotionMode): void {
-  const { setInput } = form
-  const sound = form.values.inputs[soundInput]
-  useEffect(() => {
-    if (mode === "guide" && sound !== undefined && sound !== soundOff) {
-      setInput(soundInput, soundOff)
-    }
-  }, [mode, sound, setInput])
-}
-
 function chosenFor(hosted: HostedState, tab: MotionTab): CatalogModel | null {
   const { chosen } = hosted
-  return chosen !== null && tabsOfModel(chosen).includes(tab) ? chosen : null
+  return chosen !== null && tabOfTask(chosen) === tab ? chosen : null
 }
 
 function photoMessageOf(
@@ -271,17 +213,6 @@ export function guardedOf(
   }
 }
 
-export function guidePriceOf(start: StartRun, mode: MotionMode): StartRun {
-  const amount = start.priceValue ?? null
-  if (mode !== "guide" || start.priceFrom !== "task-runs" || amount === null) {
-    return start
-  }
-  return {
-    ...start,
-    priceName: tCatalog("motion.price.fromControl", { amount }),
-  }
-}
-
 function shortcutOf(
   generate: () => void
 ): (event: KeyboardEvent<HTMLElement>) => void {
@@ -296,16 +227,13 @@ function shortcutOf(
 function useExampleChecks(
   form: AppForm,
   names: WellNames,
-  range: ClipRange | null,
-  mode: MotionMode
+  range: ClipRange | null
 ): [LibraryExample | null, MotionChecks] {
   const example = exampleOfForm(form)
   const checks = useMotionChecks(
     form,
     names,
     range,
-    example === null && mode === "guide",
-    example?.guide ?? null,
     example?.preview?.aspectRatio ?? null
   )
   return [example, checks]
@@ -316,12 +244,22 @@ function startOf(
   chain: MotionChain | null,
   base: StartRun,
   checks: MotionChecks,
-  focus: (name: string) => void,
-  mode: MotionMode
+  focus: (name: string) => void
 ): StartRun {
   return chain === null
-    ? guidePriceOf({ ...base, generate: guardedOf(base, checks, focus) }, mode)
+    ? { ...base, generate: guardedOf(base, checks, focus) }
     : { ...chain.start, generate: guardedOf(chain.start, checks, focus) }
+}
+
+/** The one sentence that says which stretch Motion keeps of a clip longer than the model takes. */
+export function clipNoteOf(
+  seconds: number | null,
+  range: ClipRange | null
+): string | null {
+  const trimmed = trimmedOf(seconds, range)
+  return trimmed === null
+    ? null
+    : tCatalog("motion.input.clip.trimmed", trimmed)
 }
 
 function ownVideoOf(form: AppForm): () => void {
@@ -348,20 +286,18 @@ export function useMotionScreen(
   usePriceRefresh(app.id, runs.runs)
   const tab = tabOf(form, initialTab)
   const chosen = chosenFor(hosted, tab)
-  useTabOfModel(form, hosted.chosen, tab)
+  const tabHosted = useTabHosted(app, form, hosted, tab)
+  useTabMatchesModel(form, hosted.chosen, tab, tabHosted.setTab)
   check.current = checkFor(app, chosen)
   const names = wellNamesOf(app, chosen)
-  const range = clipRangeOf(app, chosen)
-  const mode = modeOfTab(tab)
-  useSilentGuide(form, mode)
-  const [example, checks] = useExampleChecks(form, names, range, mode)
-  const modeHosted = useModeHosted(app, form, hosted, tab)
+  const range = clipRangeOf(chosen, textOf(form.values.inputs[modelInput]))
+  const [example, checks] = useExampleChecks(form, names, range)
   const [pickCharacter, hasPickFailed] = useCharacterPhoto(form, names.photo)
   const [focus, registerWell] = useFocusers()
   const held = { ...form, values: heldValuesOf(app, form.values) }
   const base = useStartRun(app, held, onStarted, { ...hosted, chosen })
   const chain = useMotionChain({ example, form, clipSize: checks.clipSize })
-  const start = startOf(chain, base, checks, focus, mode)
+  const start = startOf(chain, base, checks, focus)
   const isOwn = isOwnChain(example, form)
   const model = chosen === null ? appName(app) : modelNameOf(chosen)
   return {
@@ -371,18 +307,19 @@ export function useMotionScreen(
     isOwnChain: isOwn,
     useOwnVideo: ownVideoOf(form),
     tab,
-    mode,
+    setTab: tabHosted.setTab,
     form,
     start,
-    hosted: modeHosted,
+    hosted: tabHosted.hosted,
     isGraph: chosen === null || isGraph(chosen),
     names,
     range,
     checks,
     clipMessage: clipMessageOf(checks.clip, range, isOwn ? null : model),
+    clipNote: clipNoteOf(checks.clipSeconds, range),
     photoMessage: photoMessageOf(checks.photo, hasPickFailed),
     restFields: restFieldsOf(chosen),
-    graphRest: graphRestOf(app, tab),
+    graphRest: graphRestOf(app),
     lastSeed: runs.runs.find((run) => run.seed !== null)?.seed ?? null,
     pickCharacter,
     registerWell,

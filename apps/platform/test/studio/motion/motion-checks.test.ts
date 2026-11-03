@@ -3,11 +3,12 @@ import { ratioOfSize } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import {
   clipProblem,
-  guideShapeProblem,
   isLengthProblem,
   type MediaFacts,
   photoProblem,
+  trimmedOf,
 } from "@/studio/motion/motion-checks"
+import type { ClipRange } from "@/studio/motion/motion-tabs"
 import { shapeOf } from "@/studio/motion/use-motion-checks"
 
 const clip = (change: Partial<MediaFacts>): MediaFacts => ({
@@ -27,6 +28,12 @@ const photo = (change: Partial<MediaFacts>): MediaFacts => ({
   seconds: null,
   ...change,
 })
+
+const graph: ClipRange = { min: 2, max: 10, trims: true }
+
+const swapGraph: ClipRange = { min: 2, max: 5, trims: true }
+
+const hosted: ClipRange = { min: 2, max: 10, trims: false }
 
 function words(problem: ReturnType<typeof clipProblem>): string | null {
   return problem === null ? null : t(problem.key, problem.values)
@@ -52,19 +59,35 @@ describe("the motion checks", () => {
     expect(ratioOfSize(0, 1080)).toBeNull()
   })
 
-  it("passes a clip of 5 seconds and names a clip of 14 seconds in the app's words", () => {
-    expect(clipProblem(clip({}))).toBeNull()
-    expect(words(clipProblem(clip({ seconds: 14 })))).toBe(
-      "This clip runs 14 seconds. Pick one of 10 seconds or less."
-    )
-    expect(words(clipProblem(clip({ seconds: 1.5 })))).toBe(
+  it("takes a clip of 38 seconds on a Motion graph, which keeps its first stretch, and still refuses one of 1.5 seconds", () => {
+    expect(clipProblem(clip({}), graph)).toBeNull()
+    expect(clipProblem(clip({ seconds: 38 }), graph)).toBeNull()
+    expect(clipProblem(clip({ seconds: 38 }), swapGraph)).toBeNull()
+    expect(words(clipProblem(clip({ seconds: 1.5 }), graph))).toBe(
       "This clip runs 1.5 seconds. Pick one of 2 seconds or more."
     )
-    expect(clipProblem(clip({ seconds: 10 }))).toBeNull()
+    expect(clipProblem(clip({ seconds: 10 }), graph)).toBeNull()
+  })
+
+  it("refuses a clip of 38 seconds on a model that does not trim, the control", () => {
+    expect(words(clipProblem(clip({ seconds: 38 }), hosted))).toBe(
+      "This clip runs 38 seconds. Pick one of 10 seconds or less."
+    )
+  })
+
+  it("names the stretch a Motion graph keeps of a longer clip, and none for a clip it takes whole or a model that refuses it", () => {
+    expect(trimmedOf(38, graph)).toEqual({ max: 10, seconds: "38" })
+    expect(trimmedOf(38, swapGraph)).toEqual({ max: 5, seconds: "38" })
+    expect(trimmedOf(241 / 24, graph)).toEqual({ max: 10, seconds: "10.04" })
+    expect(trimmedOf(10, graph)).toBeNull()
+    expect(trimmedOf(4, swapGraph)).toBeNull()
+    expect(trimmedOf(38, hosted)).toBeNull()
+    expect(trimmedOf(null, graph)).toBeNull()
+    expect(trimmedOf(38, null)).toBeNull()
   })
 
   it("judges a clip by the range of the chosen model, under the name of its well", () => {
-    const range = { min: 3, max: 8 }
+    const range = { min: 3, max: 8, trims: false }
     expect(
       clipProblem(clip({ seconds: 5 }), range, "referenceVideo")
     ).toBeNull()
@@ -87,15 +110,15 @@ describe("the motion checks", () => {
   })
 
   it("refuses a clip past 100 MB and a clip in a format the app does not take", () => {
-    expect(clipProblem(clip({ bytes: 120_000_000 }))?.key).toBe(
+    expect(clipProblem(clip({ bytes: 120_000_000 }), graph)?.key).toBe(
       "field.asset.tooLarge"
     )
-    expect(clipProblem(clip({ mime: "video/x-matroska" }))).toEqual({
+    expect(clipProblem(clip({ mime: "video/x-matroska" }), graph)).toEqual({
       name: "clip",
       key: "field.asset.wrongKind",
       values: { kinds: "MP4, MOV or WebM" },
     })
-    expect(clipProblem(clip({ mime: "video/quicktime" }))).toBeNull()
+    expect(clipProblem(clip({ mime: "video/quicktime" }), graph)).toBeNull()
   })
 
   it("refuses a photo past 20 MB or in GIF, and passes a JPEG of a phone", () => {
@@ -134,19 +157,23 @@ describe("the motion checks", () => {
       said: "This clip runs 12.3 seconds. Pick one of 10 seconds or less.",
     },
   ])(
-    "judges a clip of $seconds seconds by its exact length, because the graph keeps only its first 10 seconds",
+    "judges a clip of $seconds seconds by its exact length on a model that keeps only 10 seconds and trims nothing",
     ({ seconds, said }) => {
-      expect(words(clipProblem(clip({ seconds })))).toBe(said)
+      expect(words(clipProblem(clip({ seconds }), hosted))).toBe(said)
     }
   )
 
   it("refuses a clip the browser cannot read, so no run starts on an unknown length", () => {
     const said =
       "This input takes an MP4, MOV or WebM video this browser can open. Pick another file."
-    expect(words(clipProblem(clip({ seconds: null })))).toBe(said)
-    expect(words(clipProblem(clip({ width: null, height: null })))).toBe(said)
+    expect(words(clipProblem(clip({ seconds: null }), graph))).toBe(said)
+    expect(words(clipProblem(clip({ width: null, height: null }), graph))).toBe(
+      said
+    )
     expect(
-      words(clipProblem(clip({ seconds: null, width: null, height: null })))
+      words(
+        clipProblem(clip({ seconds: null, width: null, height: null }), graph)
+      )
     ).toBe(said)
   })
 
@@ -159,55 +186,12 @@ describe("the motion checks", () => {
 
   it("names the format or size first when a file is both wrong and unreadable", () => {
     expect(
-      clipProblem(clip({ mime: "video/x-matroska", seconds: null }))?.values
+      clipProblem(clip({ mime: "video/x-matroska", seconds: null }), graph)
+        ?.values
     ).toEqual({ kinds: "MP4, MOV or WebM" })
     expect(
       photoProblem(photo({ bytes: 21_000_000, width: null, height: null }))?.key
     ).toBe("field.asset.tooLarge")
-  })
-})
-
-describe("the guide's shape beside the photo", () => {
-  const portrait = photo({ width: 1080, height: 1920 })
-  const guide = (width: number, height: number): MediaFacts =>
-    clip({ width, height, seconds: 8.54 })
-
-  it.each([
-    { name: "flip, draft", size: [448, 768], at: "480p" },
-    { name: "flip, final", size: [704, 1280], at: "720p" },
-    { name: "grab and run, draft", size: [448, 768], at: "480p" },
-  ])("takes the $name depth video beside a 9:16 photo", ({ size, at }) => {
-    const [width = 0, height = 0] = size
-    expect(guideShapeProblem(guide(width, height), portrait, at)).toBeNull()
-  })
-
-  it("takes the ticket wipe depth video beside a 15:11 photo at both resolutions", () => {
-    const wide = photo({ width: 1920, height: 1408 })
-    for (const at of ["480p", "720p"]) {
-      expect(guideShapeProblem(guide(960, 704), wide, at)).toBeNull()
-    }
-  })
-
-  it("refuses a wide guide beside a tall photo, naming both sizes, the control", () => {
-    const problem = guideShapeProblem(guide(1280, 704), portrait, "720p")
-    expect(problem).toEqual({
-      name: "clip",
-      key: "field.asset.wrongShape",
-      values: {
-        width: "1280",
-        height: "704",
-        fitWidth: "704",
-        fitHeight: "1280",
-      },
-    })
-    expect(words(problem)).toBe(
-      "This video is 1280 by 704, and your photo makes a video of 704 by 1280. Give both the same shape."
-    )
-  })
-
-  it("waits for a size it can read", () => {
-    const unread = clip({ width: null, height: null })
-    expect(guideShapeProblem(unread, portrait, "720p")).toBeNull()
   })
 })
 

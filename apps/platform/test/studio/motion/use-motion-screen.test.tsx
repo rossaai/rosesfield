@@ -13,17 +13,14 @@ import type { AppForm } from "@/screens/app/use-app-form"
 import type { MediaFacts } from "@/studio/motion/motion-checks"
 import type { MotionTab } from "@/studio/motion/motion-tabs"
 import type { MediaReading } from "@/studio/motion/use-media-facts"
-import {
-  guidePriceOf,
-  useMotionScreen,
-} from "@/studio/motion/use-motion-screen"
+import { useMotionScreen } from "@/studio/motion/use-motion-screen"
 import {
   catalog,
   graph,
   graphId,
-  guide,
   motionListing,
   mover,
+  swapGraphId,
   swapper,
 } from "./motion-fixtures"
 
@@ -154,8 +151,7 @@ vi.mock("@/studio/motion/use-media-facts", () => ({
 const photo = "photo-1"
 const clip = "clip-5s"
 const longClip = "clip-12s"
-const depthGuide = "guide-704x1280"
-const wideGuide = "guide-1280x704"
+const tooLongClip = "clip-38s"
 
 function video(seconds: number): MediaFacts {
   return {
@@ -182,8 +178,7 @@ function renderMotion(
   })
   world.files.set(clip, video(5))
   world.files.set(longClip, video(12))
-  world.files.set(depthGuide, { ...video(8.54), width: 704, height: 1280 })
-  world.files.set(wideGuide, { ...video(8.54), width: 1280, height: 704 })
+  world.files.set(tooLongClip, video(38))
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
@@ -205,50 +200,75 @@ function renderMotion(
 afterEach(cleanup)
 
 describe("Motion opens", () => {
-  it("on Move a photo with the graph, its Clip and Photo wells, and every model of both modes in one picker", () => {
+  it("on Move with the LTX 2.3 control graph, its Clip and Photo wells, and only Move's models in the picker", () => {
     const { result } = renderMotion({})
     expect(result.current.tab).toBe("move")
     expect(result.current.isGraph).toBe(true)
     expect(result.current.names).toEqual({ clip: "clip", photo: "photo" })
-    expect(result.current.range).toEqual({ min: 2, max: 10 })
+    expect(result.current.range).toEqual({ min: 2, max: 10, trims: true })
     expect(result.current.hosted.models.map((one) => one.id)).toEqual([
       graphId,
-      guide.id,
       mover.id,
+    ])
+  })
+
+  it("on Swap from the old Recast address, with the swap graph and only Swap's models in the picker", () => {
+    const { result } = renderMotion({}, "swap")
+    expect(result.current.tab).toBe("swap")
+    expect(result.current.form.values.inputs.model).toBe(swapGraphId)
+    expect(result.current.isGraph).toBe(true)
+    expect(result.current.range).toEqual({ min: 2, max: 5, trims: true })
+    expect(result.current.hosted.models.map((one) => one.id)).toEqual([
+      swapGraphId,
       swapper.id,
     ])
   })
 
-  it("on Swap a character from the old Recast address, still on the graph", () => {
-    const { result } = renderMotion({}, "swap")
+  it("on the tab of a run you use again, whatever the address, the control", () => {
+    const { result } = renderMotion({ model: swapGraphId, clip: [clip] })
     expect(result.current.tab).toBe("swap")
-    expect(result.current.isGraph).toBe(true)
-    expect(result.current.hosted.models.map((one) => one.id)).toEqual([
-      graphId,
-      guide.id,
-      mover.id,
-      swapper.id,
-    ])
+    expect(result.current.form.values.inputs.model).toBe(swapGraphId)
+  })
+})
+
+describe("Motion's tabs", () => {
+  it("move your clip and your photo to Swap's first model and back to Move's", () => {
+    const { result } = renderMotion({ clip: [clip], photo: [photo] })
+    act(() => result.current.setTab("swap"))
+    expect(result.current.tab).toBe("swap")
+    expect(result.current.form.values.inputs.model).toBe(swapGraphId)
+    expect(result.current.form.values.inputs.clip).toEqual([clip])
+    expect(result.current.form.values.inputs.photo).toEqual([photo])
+    act(() => result.current.setTab("move"))
+    expect(result.current.tab).toBe("move")
+    expect(result.current.form.values.inputs.model).toBe(graphId)
+    expect(result.current.form.values.inputs.clip).toEqual([clip])
+  })
+
+  it("keep your clip in the wells of a hosted model you pick on Swap", () => {
+    const { result } = renderMotion({ clip: [clip], photo: [photo] })
+    act(() => result.current.hosted.choose(mover.id))
+    expect(result.current.tab).toBe("move")
+    act(() => result.current.setTab("swap"))
+    expect(result.current.hosted.chosen?.id).toBe(swapGraphId)
+    act(() => result.current.hosted.choose(swapper.id))
+    expect(result.current.tab).toBe("swap")
+    expect(result.current.isGraph).toBe(false)
+    expect(
+      result.current.form.values.inputs[result.current.names.clip]
+    ).toEqual([clip])
+  })
+
+  it("leave a Library example for your own video when you open Swap", () => {
+    const { result } = renderMotion({ example: "grab-and-run" })
+    expect(result.current.example?.id).toBe("grab-and-run")
+    act(() => result.current.setTab("swap"))
+    expect(result.current.example).toBeNull()
+    expect(result.current.form.values.inputs.example).toBe("own")
   })
 })
 
 describe("Motion keeps your files", () => {
-  it("when you pick a model that swaps a character, which sets the mode to swap, and when you go back to the graph", () => {
-    const { result } = renderMotion({ clip: [clip], photo: [photo] })
-    expect(result.current.checks.readingInput).toBeNull()
-    expect(result.current.checks.clip).toBeNull()
-    act(() => result.current.hosted.choose(swapper.id))
-    expect(result.current.tab).toBe("swap")
-    expect(result.current.isGraph).toBe(false)
-    const names = result.current.names
-    expect(result.current.form.values.inputs[names.clip]).toEqual([clip])
-    expect(result.current.form.values.inputs[names.photo]).toEqual([photo])
-    act(() => result.current.hosted.choose(graphId))
-    expect(result.current.isGraph).toBe(true)
-    expect(result.current.form.values.inputs.clip).toEqual([clip])
-    expect(result.current.form.values.inputs.photo).toEqual([photo])
-  })
-
   it("in the wells of the model you pick, with the inputs and the length its schema declares", () => {
     const { result } = renderMotion({ clip: [clip], photo: [photo] })
     act(() => result.current.hosted.choose(mover.id))
@@ -259,134 +279,61 @@ describe("Motion keeps your files", () => {
     })
     expect(result.current.form.values.inputs.referenceVideo).toEqual([clip])
     expect(result.current.form.values.inputs.characterImage).toEqual([photo])
-    expect(result.current.range).toEqual({ min: 3, max: 8 })
+    expect(result.current.range).toEqual({ min: 3, max: 8, trims: false })
     expect(result.current.restFields.map((field) => field.name)).toEqual([
       "duration",
       "prompt",
     ])
   })
 
-  it("names the model's range for a clip it does not take, starts no run and keeps your photo", () => {
-    const { result } = renderMotion({ clip: [longClip], photo: [photo] })
-    expect(result.current.clipMessage).toBe(
-      `${graphId} takes videos of 2 to 10 seconds. This one runs 12 seconds.`
+  it("takes a 38-second clip on the graph, says in one sentence that it keeps the first 10 seconds, and starts a run", () => {
+    const { result } = renderMotion({ clip: [tooLongClip], photo: [photo] })
+    expect(result.current.clipMessage).toBeNull()
+    expect(result.current.clipNote).toBe(
+      "Motion takes the first 10 seconds of your 38-second video."
     )
     act(() => result.current.start.generate())
-    expect(world.started).toBe(0)
-    expect(result.current.form.values.inputs.photo).toEqual([photo])
-    expect(result.current.form.values.inputs.clip).toEqual([longClip])
+    expect(world.started).toBe(1)
   })
 
-  it("starts a run once the clip fits the model", () => {
+  it("takes the first 5 seconds of a 12-second clip on Swap, the stretch the swap graph keeps", () => {
+    const { result } = renderMotion(
+      { clip: [longClip], photo: [photo] },
+      "swap"
+    )
+    expect(result.current.clipMessage).toBeNull()
+    expect(result.current.clipNote).toBe(
+      "Motion takes the first 5 seconds of your 12-second video."
+    )
+  })
+
+  it("says nothing about a clip the model takes whole", () => {
     const { result } = renderMotion({ clip: [clip], photo: [photo] })
+    expect(result.current.clipNote).toBeNull()
     expect(result.current.clipMessage).toBeNull()
     act(() => result.current.start.generate())
     expect(world.started).toBe(1)
   })
+
+  it("names the range of a model that cannot trim, starts no run and keeps your photo, the control", () => {
+    const { result } = renderMotion({ clip: [longClip], photo: [photo] })
+    act(() => result.current.hosted.choose(mover.id))
+    expect(result.current.clipNote).toBeNull()
+    expect(result.current.clipMessage).toBe(
+      `${mover.id} takes videos of 3 to 8 seconds. This one runs 12 seconds.`
+    )
+    act(() => result.current.start.generate())
+    expect(world.started).toBe(0)
+    expect(result.current.form.values.inputs.characterImage).toEqual([photo])
+  })
 })
 
-describe("Swap a character", () => {
+describe("Swap", () => {
   it("fills the Photo well with the first photo of the character you pick", async () => {
     const { result } = renderMotion({ clip: [clip] }, "swap")
     act(() => result.current.pickCharacter("character-ana"))
     await waitFor(() =>
       expect(result.current.form.values.inputs.photo).toEqual(["ref-front"])
     )
-  })
-})
-
-describe("Follow a guide", () => {
-  it("is the depth guide row of the one model list: choosing it keeps your photo and video and leaves the clip's sound out, and choosing the graph again restores it", () => {
-    const { result } = renderMotion({ clip: [depthGuide], photo: [photo] })
-    expect(result.current.mode).toBe("clip")
-    act(() => result.current.hosted.choose(guide.id))
-    expect(result.current.mode).toBe("guide")
-    expect(result.current.tab).toBe("guide")
-    expect(result.current.isGraph).toBe(true)
-    expect(result.current.form.values.inputs.model).toBe(guide.id)
-    expect(result.current.form.values.inputs.clip).toEqual([depthGuide])
-    expect(result.current.form.values.inputs.photo).toEqual([photo])
-    expect(result.current.form.values.inputs.sound).toBe("off")
-    expect(result.current.hosted.models.map((one) => one.id)).toContain(graphId)
-    expect(result.current.graphRest.map((input) => input.name)).toEqual([])
-    act(() => result.current.hosted.choose(graphId))
-    expect(result.current.mode).toBe("clip")
-    expect(result.current.form.values.inputs.clip).toEqual([depthGuide])
-    expect(result.current.form.values.inputs.sound).toBe("on")
-  })
-
-  it("starts a run with a guide in your photo's shape", () => {
-    const { result } = renderMotion({
-      clip: [depthGuide],
-      photo: [photo],
-      model: guide.id,
-      resolution: "720p",
-    })
-    expect(result.current.mode).toBe("guide")
-    expect(result.current.form.values.inputs.sound).toBe("off")
-    expect(result.current.start.priceName).toBe(
-      "Generate, 40 Comfy credits, estimated from your runs of LTX 2.3 control"
-    )
-    expect(result.current.checks.clip).toBeNull()
-    act(() => result.current.start.generate())
-    expect(world.started).toBe(1)
-  })
-
-  it("refuses a guide in another shape than your photo with both sizes, starts no run and keeps your files", () => {
-    const { result } = renderMotion({
-      clip: [wideGuide],
-      photo: [photo],
-      model: guide.id,
-      resolution: "720p",
-    })
-    expect(result.current.clipMessage).toBe(
-      "This video is 1280 by 704, and your photo makes a video of 704 by 1280. Give both the same shape."
-    )
-    act(() => result.current.start.generate())
-    expect(world.started).toBe(0)
-    expect(result.current.form.values.inputs.clip).toEqual([wideGuide])
-    expect(result.current.form.values.inputs.photo).toEqual([photo])
-  })
-
-  it("refuses a guide longer than the graph takes, the control", () => {
-    const { result } = renderMotion({
-      clip: [longClip],
-      photo: [photo],
-      model: guide.id,
-      resolution: "720p",
-    })
-    expect(result.current.clipMessage).toBe(
-      `${guide.id} takes videos of 2 to 10 seconds. This one runs 12 seconds.`
-    )
-    act(() => result.current.start.generate())
-    expect(world.started).toBe(0)
-  })
-})
-
-describe("the price Generate names in Follow a guide", () => {
-  const base = {
-    generate: () => undefined,
-    isPending: false,
-    error: null,
-    price: "",
-    priceValue: "12",
-    priceName: "Generate, 12 Comfy credits, estimated",
-  }
-
-  it("names the Motion graph's runs when the estimate comes from them", () => {
-    expect(
-      guidePriceOf({ ...base, priceFrom: "task-runs" }, "guide").priceName
-    ).toBe(
-      "Generate, 12 Comfy credits, estimated from your runs of LTX 2.3 control"
-    )
-  })
-
-  it("keeps the price's own name for a measured guide run and in Copy a clip, the control", () => {
-    expect(
-      guidePriceOf({ ...base, priceFrom: "measured" }, "guide").priceName
-    ).toBe(base.priceName)
-    expect(
-      guidePriceOf({ ...base, priceFrom: "task-runs" }, "clip").priceName
-    ).toBe(base.priceName)
   })
 })

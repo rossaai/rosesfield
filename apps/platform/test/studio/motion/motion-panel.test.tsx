@@ -3,7 +3,7 @@ import { cleanup, fireEvent, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t, tCatalog } from "@/copy/t"
 import { defaultsOf } from "@/screens/app/app-form"
-import { MotionPanel } from "@/studio/motion/motion-panel"
+import { MotionPanel, MotionTabs } from "@/studio/motion/motion-panel"
 import { graphRestOf } from "@/studio/motion/motion-tabs"
 import type { MotionState } from "@/studio/motion/use-motion-screen"
 import {
@@ -14,7 +14,7 @@ import {
   showColumn,
   theModelChip,
 } from "../column"
-import { catalog, graph, guide, motionListing } from "./motion-fixtures"
+import { catalog, graph, motionListing } from "./motion-fixtures"
 
 const app = motionListing()
 
@@ -34,7 +34,7 @@ function graphState(): MotionState {
     chain: null,
     useOwnVideo: () => undefined,
     tab: "move",
-    mode: "clip",
+    setTab: () => undefined,
     form: formOf(defaultsOf(app)),
     start: {
       generate: () => undefined,
@@ -57,8 +57,15 @@ function graphState(): MotionState {
     isOwnChain: false,
     names: { clip: "clip", photo: "photo" },
     range: null,
-    checks: { clip: null, photo: null, readingInput: null, clipSize: null },
+    checks: {
+      clip: null,
+      photo: null,
+      readingInput: null,
+      clipSize: null,
+      clipSeconds: null,
+    },
     clipMessage: null,
+    clipNote: null,
     photoMessage: null,
     restFields: [],
     graphRest: graphRestOf(app),
@@ -88,8 +95,27 @@ describe("the Motion column", () => {
   })
 })
 
-describe("Motion's one mode", () => {
-  it("offers Pick a character under the photo well with no tab, so you swap a character from the same column", () => {
+describe("Motion's tabs", () => {
+  it("are one row named Mode with Move and Swap, and Swap asks the screen for the Swap mode", () => {
+    const asked: string[] = []
+    showColumn(
+      <MotionTabs state={{ tab: "move", setTab: (tab) => asked.push(tab) }} />
+    )
+    const row = screen.getByRole("tablist", {
+      name: tCatalog("motion.tabs.label"),
+    })
+    const tabs = Array.from(row.querySelectorAll("[role='tab']"))
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      tCatalog("motion.tab.move"),
+      tCatalog("motion.tab.swap"),
+    ])
+    expect(tCatalog("motion.tab.move")).toBe("Move")
+    expect(tCatalog("motion.tab.swap")).toBe("Swap")
+    fireEvent.click(screen.getByRole("tab", { name: "Swap" }))
+    expect(asked).toEqual(["swap"])
+  })
+
+  it("offer Pick a character under the photo well, so you pick who goes into your video on either tab", () => {
     showColumn(<MotionPanel state={graphState()} />)
     const photo = screen.getByText(tCatalog("motion.input.photo.label"))
     const pick = screen.getByRole("button", {
@@ -97,36 +123,35 @@ describe("Motion's one mode", () => {
     })
     expect(isBefore(photo, pick)).toBe(true)
     expect(isBefore(pick, theModelChip())).toBe(true)
-    expect(screen.queryByRole("tablist")).toBeNull()
+  })
+})
+
+describe("Motion's notes", () => {
+  it("say which stretch Motion keeps of a long clip under the video well, as a note and not a fault", () => {
+    const words = "Motion takes the first 10 seconds of your 38-second video."
+    showColumn(<MotionPanel state={{ ...graphState(), clipNote: words }} />)
+    const note = screen.getByText(words)
+    expect(note.closest("[data-slot='field-note']")).not.toBeNull()
+    expect(note.closest("[data-slot='field-message']")).toBeNull()
   })
 
-  it("names the video well Guide video with its note when the depth guide model is chosen, with no tab and no clip's sound", () => {
-    const state: MotionState = {
-      ...graphState(),
-      tab: "guide",
-      mode: "guide",
-      graphRest: graphRestOf(app, "guide"),
-    }
-    state.hosted = { ...state.hosted, chosen: guide }
-    showColumn(<MotionPanel state={state} />)
+  it("show no note under the video well for a clip Motion takes whole, the control", () => {
+    showColumn(<MotionPanel state={graphState()} />)
+    expect(document.querySelector("[data-slot='field-note']")).toBeNull()
+  })
+
+  it("never say how many photos your own video takes", () => {
+    showColumn(<MotionPanel state={{ ...graphState(), isOwnChain: true }} />)
     expect(
-      screen.getByText(tCatalog("motion.input.guide.label")).isConnected
+      screen.getByText(tCatalog("motion.input.photos.label")).isConnected
     ).toBe(true)
-    expect(
-      screen.getByText(tCatalog("motion.input.guide.note")).isConnected
-    ).toBe(true)
-    expect(screen.queryByText(tCatalog("motion.input.clip.label"))).toBeNull()
-    expect(screen.queryByRole("tablist")).toBeNull()
-    expect(
-      screen.queryByRole("switch", {
-        name: tCatalog("motion.input.sound.label"),
-      })
-    ).toBeNull()
+    expect(screen.queryByText(/1 to 15/)).toBeNull()
+    expect(document.querySelector("[data-slot='field-note']")).toBeNull()
   })
 })
 
 describe("Motion with an example from its Library", () => {
-  it("shows the example's result and its need in place of the video well, asks for your image, and hides the model", () => {
+  it("shows the example's result in place of the video well with no hint about your photo, asks for your image, and hides the model", () => {
     const grab = exampleOf("grab-and-run")
     let ownVideo = 0
     const state: MotionState = {
@@ -139,8 +164,9 @@ describe("Motion with an example from its Library", () => {
     showColumn(<MotionPanel state={state} />)
     const name = screen.getByText(tCatalog("motion.example.grabAndRun.name"))
     expect(
-      screen.getByText(tCatalog("motion.example.grabAndRun.photo")).isConnected
-    ).toBe(true)
+      screen.queryByText(tCatalog("motion.example.grabAndRun.photo"))
+    ).toBeNull()
+    expect(document.querySelector("[data-slot='field-note']")).toBeNull()
     expect(
       screen.getByText(tCatalog("motion.input.photo.label")).isConnected
     ).toBe(true)

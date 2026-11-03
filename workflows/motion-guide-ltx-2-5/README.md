@@ -22,7 +22,7 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 | `scene` | 900 `StringConcatenate`, Scene | `string_b` | a value |
 | `seed` | 980 `RandomNoise`, Seed | `noise_seed` | a value |
 
-The catalog sets the short side, node 702, from a run's `resolution`: 512 for 480p and 768 for 720p. It names node 68, the video, as the run's one result, so the last frame of node 1011 is held out of the library for the end key. It removes nodes 950 to 969 and the guide's `attention_mask` when a run has no mask, so the guide holds every pixel at full attention. It removes the end-key nodes 1001 to 1005 when a run has no end key, and the last-frame nodes 1010 and 1011 when it has one.
+The catalog sets the short side, node 702, from a run's `resolution`: 512 for 480p and 768 for 720p. It names node 68, the video, as the run's one result, so the last frame of node 1011 is held out of the library for the end key. It removes nodes 950 to 969 and the guide's `attention_mask` when a run has no mask, so the guide holds every pixel at full attention. It removes the end-key nodes 1001 to 1005 when a run has no end key, and the last-frame nodes 1010 and 1011 when it has one. For an example of Motion's Library, it adds nodes 1040 to 1042, which scale your photo to cover the guide's shape at the render's size and cut it at its centre, and feeds node 1042 to nodes 198, 721 and 994 in place of node 200, so a photo of any shape starts the guide's video and the guide is never cut.
 
 ## Outputs
 
