@@ -90,7 +90,7 @@ function useSeededValues(
         next = await placeAll(client, app, next, [seeds.use])
       }
       setValues(next)
-      if (fromRun !== null) {
+      if (fromRun !== null || example !== null) {
         setSource("seed")
       } else if (seeds.use !== undefined || hasPlaced(draft)) {
         setSource("placed")
