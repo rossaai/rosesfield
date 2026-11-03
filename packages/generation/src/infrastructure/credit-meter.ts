@@ -29,11 +29,13 @@ export class CreditMeter {
   static readonly creditsPerCent = CreditMeter.creditsPerUsd / 100
   static readonly settleMs = 2000
   static readonly settleTries = 5
+  static readonly heldMs = 600_000
   static readonly staleMs = 7_200_000
 
   private readonly clock: Clock
   private readonly wait: (ms: number) => Promise<void>
   private readonly open = new Map<string, Set<MeterTicket>>()
+  private readonly held = new Map<string, Map<MeterTicket, number>>()
   private readonly byRef = new Map<string, MeterTicket>()
   private readonly deferred = new Set<string>()
   private readonly finished = new Map<string, Finished>()
@@ -71,7 +73,11 @@ export class CreditMeter {
     running.add(ticket)
     this.open.set(tag, running)
     if (!ticket.isShared) {
-      ticket.before = await this.balanceOf(reader)
+      const before = await this.balanceOf(reader)
+      if (this.isSettled(tag, before)) {
+        this.held.delete(tag)
+        ticket.before = before
+      }
     }
     return ticket
   }
@@ -122,11 +128,32 @@ export class CreditMeter {
     if (ticket === null) {
       return null
     }
+    let credits: number | null = null
     try {
-      return await this.spentBy(reader, ticket)
+      credits = await this.spentBy(reader, ticket)
+      return credits
     } finally {
       this.drop(ticket)
+      if (credits === null) {
+        this.hold(ticket)
+      }
     }
+  }
+
+  private hold(ticket: MeterTicket): void {
+    const held = this.held.get(ticket.tag) ?? new Map<MeterTicket, number>()
+    held.set(ticket, this.now())
+    this.held.set(ticket.tag, held)
+  }
+
+  private isSettled(tag: string, balance: number | null): boolean {
+    const held = this.held.get(tag)
+    if (held === undefined) {
+      return true
+    }
+    const [only] = held.keys()
+    const before = held.size === 1 ? (only?.before ?? null) : null
+    return balance !== null && before !== null && balance < before
   }
 
   private async spentBy(
@@ -180,6 +207,16 @@ export class CreditMeter {
       if (now - ticket.startedAt >= CreditMeter.staleMs) {
         this.byRef.delete(ref)
         this.deferred.delete(ref)
+      }
+    }
+    for (const [tag, held] of this.held) {
+      for (const [ticket, at] of held) {
+        if (now - at >= CreditMeter.heldMs) {
+          held.delete(ticket)
+        }
+      }
+      if (held.size === 0) {
+        this.held.delete(tag)
       }
     }
     for (const [ref, held] of this.finished) {

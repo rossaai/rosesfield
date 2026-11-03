@@ -19,13 +19,25 @@ function readerOf(recordings: Recording[], apiKey = "key") {
 
 function meterAt() {
   const waits: number[] = []
+  const clock = new FixedClock({ now: start })
   const meter = new CreditMeter({
-    clock: new FixedClock({ now: start }),
+    clock,
     wait: async (ms) => {
       waits.push(ms)
     },
   })
-  return { meter, waits }
+  return { meter, waits, clock }
+}
+
+const unmoved = Array.from({ length: CreditMeter.settleTries }, () =>
+  balance(1000)
+)
+
+const failedRead: Recording = {
+  method: "GET",
+  url: balance(0).url,
+  status: 500,
+  json: { message: "unavailable" },
 }
 
 describe("CreditMeter", () => {
@@ -156,6 +168,88 @@ describe("CreditMeter", () => {
       meter.finishRef(http, "run-1"),
     ])
     expect([first, second]).toEqual([2.11, 2.11])
+    expect(replay.unused()).toEqual([])
+  })
+
+  it("measures nothing for a run that starts before the charge of the run before it posts", async () => {
+    const { meter } = meterAt()
+    const { http, replay } = readerOf([
+      balance(1000),
+      ...unmoved,
+      balance(1000),
+      balance(998.22),
+      balance(998.22),
+    ])
+    const first = await meter.start(http)
+    expect(await meter.finish(http, first)).toBeNull()
+    const second = await meter.start(http)
+    expect(await meter.finish(http, second)).toBeNull()
+    expect(replay.unused()).toEqual([balance(998.22), balance(998.22)])
+  })
+
+  it("measures nothing after a run whose balance could not be read when it ended", async () => {
+    const { meter } = meterAt()
+    const { http, replay } = readerOf([
+      balance(1000),
+      failedRead,
+      balance(1000),
+      balance(998.22),
+      balance(998.22),
+    ])
+    const first = await meter.start(http)
+    expect(await meter.finish(http, first)).toBeNull()
+    const second = await meter.start(http)
+    expect(await meter.finish(http, second)).toBeNull()
+    expect(replay.unused()).toEqual([balance(998.22), balance(998.22)])
+  })
+
+  it("measures nothing after two runs that overlapped, even once one charge shows", async () => {
+    const { meter } = meterAt()
+    const { http, replay } = readerOf([
+      balance(1000),
+      balance(999),
+      balance(998),
+      balance(998),
+    ])
+    const first = await meter.start(http)
+    const second = await meter.start(http)
+    expect(await meter.finish(http, first)).toBeNull()
+    expect(await meter.finish(http, second)).toBeNull()
+    const third = await meter.start(http)
+    expect(await meter.finish(http, third)).toBeNull()
+    expect(replay.unused()).toEqual([balance(998), balance(998)])
+  })
+
+  it("measures the next run alone once the balance shows the late charge of the run before it", async () => {
+    const { meter } = meterAt()
+    const { http, replay } = readerOf([
+      balance(1000),
+      ...unmoved,
+      balance(998.5),
+      balance(998.22),
+      balance(998.22),
+    ])
+    const first = await meter.start(http)
+    expect(await meter.finish(http, first)).toBeNull()
+    const second = await meter.start(http)
+    expect(await meter.finish(http, second)).toBe(0.5908)
+    expect(replay.unused()).toEqual([])
+  })
+
+  it("gives up a charge that never shows after 10 minutes, and measures again", async () => {
+    const { meter, clock } = meterAt()
+    const { http, replay } = readerOf([
+      balance(1000),
+      ...unmoved,
+      balance(1000),
+      balance(999.72),
+      balance(999.72),
+    ])
+    const first = await meter.start(http)
+    expect(await meter.finish(http, first)).toBeNull()
+    clock.advance(CreditMeter.heldMs)
+    const second = await meter.start(http)
+    expect(await meter.finish(http, second)).toBe(0.5908)
     expect(replay.unused()).toEqual([])
   })
 

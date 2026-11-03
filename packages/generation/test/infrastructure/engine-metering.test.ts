@@ -14,6 +14,7 @@ import {
   pictureModel,
   pictureSchema,
   queueStatus,
+  routerSchema,
   routerUrl,
   schemaRead,
   submitted,
@@ -21,7 +22,9 @@ import {
 import {
   cloudUrl,
   comfyV2At,
+  jobId,
   proxyUrl,
+  queuedJob,
   succeededJob,
   workflowBinding,
 } from "./fixtures/comfy-v2"
@@ -61,6 +64,46 @@ function routerWith(recordings: Recording[]) {
     fetch: replay.fetch,
   })
   return { engine, replay }
+}
+
+const secondJobId = "c0ffee00-1234-4abc-8def-0123456789ab"
+
+function graphRun(id: string): Recording[] {
+  const url = `${cloudUrl}/api/v2/jobs`
+  const done = { ...succeededJob, id }
+  return [
+    { method: "POST", url, status: 201, json: { ...queuedJob, id } },
+    { method: "GET", url: `${url}/${id}`, status: 200, json: done },
+    { method: "GET", url: `${url}/${id}`, status: 200, json: done },
+  ]
+}
+
+async function costOfGraphRun(
+  engine: ComfyGenerationEngine,
+  idempotencyKey: string
+): Promise<unknown> {
+  const submission = await engine.submit({
+    ...request(workflowBinding),
+    idempotencyKey,
+  })
+  await engine.read(submission.ref)
+  return engine.read(submission.ref)
+}
+
+const unmoved = Array.from({ length: CreditMeter.settleTries }, () =>
+  balance(1000)
+)
+
+const voiceModel = "maker/voice-1"
+
+function spoken(credits: string): Recording {
+  return {
+    method: "POST",
+    url: `${routerUrl}/v2/models/${voiceModel}`,
+    status: 200,
+    headers: { "Content-Type": "audio/mpeg", "X-Comfy-Credits-Used": credits },
+    bytes: new Uint8Array([0x49, 0x44, 0x33, 4, 0, 0, 0, 0, 0, 0]),
+  }
 }
 
 describe("the real credits of a run", () => {
@@ -229,6 +272,90 @@ describe("the real credits of a run", () => {
       cost: { amount: 11.172 / 211, currency: "USD" },
     })
     expect(replay.unused()).toEqual([])
+  })
+
+  it("keep the execution_ms figure for a graph run that starts before the charge of the run before it posts", async () => {
+    const replay = new ReplayFetch([
+      balance(1000),
+      ...graphRun(jobId),
+      ...unmoved,
+      balance(1000),
+      ...graphRun(secondJobId),
+      balance(998.22),
+      balance(998.22),
+    ])
+    const engine = new ComfyGenerationEngine({
+      apiKey: "comfyui-key",
+      meter: meter(),
+      fetch: replay.fetch,
+    })
+    const gpuCost = { amount: 11.172 / 211, currency: "USD" }
+    expect(await costOfGraphRun(engine, "a")).toEqual({
+      state: "succeeded",
+      cost: gpuCost,
+    })
+    expect(await costOfGraphRun(engine, "b")).toEqual({
+      state: "succeeded",
+      cost: gpuCost,
+    })
+    expect(balanceReads(replay)).toBe(7)
+  })
+
+  it("measure a graph run alone once the late charge of the run before it shows", async () => {
+    const replay = new ReplayFetch([
+      balance(1000),
+      ...graphRun(jobId),
+      ...unmoved,
+      balance(998.5),
+      ...graphRun(secondJobId),
+      balance(998.22),
+      balance(998.22),
+    ])
+    const engine = new ComfyGenerationEngine({
+      apiKey: "comfyui-key",
+      meter: meter(),
+      fetch: replay.fetch,
+    })
+    await costOfGraphRun(engine, "a")
+    expect(await costOfGraphRun(engine, "b")).toEqual({
+      state: "succeeded",
+      cost: { amount: 0.5908 / 211, currency: "USD" },
+    })
+    expect(replay.unused()).toEqual([])
+  })
+
+  it("come from the credits Comfy reports for a synchronous Router run that starts before the charge of the run before it posts", async () => {
+    const voice = routerSchema({
+      model: voiceModel,
+      takes: ["text"],
+      makes: ["audio"],
+      answers: "audio/mpeg",
+      properties: { text: { type: "string" } },
+      required: ["text"],
+    })
+    const { engine, replay } = routerWith([
+      catalogPage([voiceModel]),
+      schemaRead(voiceModel, voice),
+      balance(1000),
+      spoken("2.11"),
+      ...unmoved,
+      balance(1000),
+      spoken("1.055"),
+      balance(998.5),
+      balance(998.5),
+    ])
+    const run = (idempotencyKey: string) =>
+      engine.submit({
+        ...request(hostedModelBinding(voiceModel)),
+        idempotencyKey,
+        inputs: { model: voiceModel, text: "hello" },
+      })
+    await run("a")
+    expect((await run("b")).finished?.cost).toEqual({
+      amount: 1.055 / 211,
+      currency: "USD",
+    })
+    expect(balanceReads(replay)).toBe(7)
   })
 
   it("are not read for a graph on your own ComfyUI", async () => {
