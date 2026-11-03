@@ -71,6 +71,8 @@ A recipe passes only with the proof of one run: a gate run of the look's criteri
 
 A recipe is an example of the Motion app. A recipe also carries a maintainer's approval or none, and an example keeps a result only when it passed or a maintainer approved it. Motion offers the approved recipes. An owner on the local lock can also try the rest, per `packages/catalog/src/motion/examples/offered-examples.ts`.
 
+Grab and run shows run `b9eef959`, a 1080p final of `motion-guide-ltx-2-5` with stage 2 told at most 60 fps, at seed 154501155. That run's graph wrote all 385 decoded frames, and its file keeps every fourth, 96 frames at 24 fps, re-encoded under 8 MB. So the recipe's `workflowHash` names that graph and differs from the hash of the shipped graph, which keeps every fourth frame itself.
+
 | End-frame source | What the graph does |
 |---|---|
 | `none` | no end frame. The video runs on the prompt and the frame 0 lock |

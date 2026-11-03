@@ -63,6 +63,7 @@ export function draftOf(
       ...(example.guide === null ? {} : { model: ltx25GuideModel }),
       ...(resolution === undefined ? {} : { resolution }),
     },
+    ...(example.preview === null ? {} : { seed: example.preview.seed }),
   }
 }
 

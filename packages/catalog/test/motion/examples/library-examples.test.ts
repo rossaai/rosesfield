@@ -30,9 +30,10 @@ describe("the Library's examples", () => {
     const grab = exampleOf("grab-and-run")
     expect(grab.approval).toEqual({
       question:
-        "Make the 1080p run, row 66, the Library example of Grab and run, and offer 1080p in Motion?",
-      words: "Yes to 1080p",
-      date: "2026-10-29",
+        "Show row 42, run b9eef959, the 1080p final on the temporal 4x graph with stage 2 at most 60 fps, as the Library example of Grab and run?",
+      words:
+        "¿Por qué en el Motion, en la Library, no aparece el video chingón, güey? El que ya arreglamos con Motion de por 4, güey. ¿Por qué sigue apareciendo el que está todo bugueado, todo feo, todo ojete?",
+      date: "2026-11-02",
     })
     expect(grab.preview).toMatchObject({
       resolution: "1080p",
@@ -40,7 +41,14 @@ describe("the Library's examples", () => {
       width: 1152,
       height: 1792,
       sha256:
-        "8f49565df3d7a601482ce9db2eeb54a96a91936fba3b30802127fb4cb5e09a4c",
+        "02203c82d13b983da1ea3aa2d570d579cabe624d54b33c34577ea2a37d3b5abd",
+      bytes: 7_996_378,
+      runId: "b9eef959-8ac8-42a2-8e90-38a66d0b8312",
+      seed: 154_501_155,
+      workflowHash:
+        "70a15d07962bc2c0bc1692c96063d3970aa94a15f2e9c148c693ecfadc522c14",
+      model: "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+      credits: 51.66,
     })
   })
 

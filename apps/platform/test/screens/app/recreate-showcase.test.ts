@@ -2,6 +2,7 @@ import { type Asset, asset } from "@rosesfield/contract"
 import { QueryClient } from "@tanstack/react-query"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { assetQuery } from "@/api/queries"
+import { exampleDraftOf } from "@/catalog/app-examples"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { defaultsOf } from "@/screens/app/app-form"
 import { fillFromDraft } from "@/screens/app/form-fill"
@@ -98,5 +99,37 @@ describe("Recreate on a showcase example", () => {
     expect(String(values.inputs.prompt)).toMatch(
       /^An ordinary smartphone photo taken at night/
     )
+  })
+
+  it("starts Motion's Grab and run from the fixed seed of the result its Library shows", async () => {
+    const app = findCatalogApp("motion")
+    const draft = exampleDraftOf("motion", "grab-and-run")
+    if (app === null || draft === null) {
+      throw new Error("Motion shows Grab and run")
+    }
+    const values = await fillFromDraft(
+      new QueryClient(),
+      app,
+      defaultsOf(app),
+      draft
+    )
+    expect(values.seedMode).toBe("fixed")
+    expect(values.inputs.seed).toBe(154_501_155)
+  })
+
+  it("leaves the seed random for a draft that names none, the control", async () => {
+    const app = findCatalogApp("motion")
+    const draft = exampleDraftOf("motion", "grab-and-run")
+    if (app === null || draft === null) {
+      throw new Error("Motion shows Grab and run")
+    }
+    const { seed: _shown, ...unseeded } = draft
+    const values = await fillFromDraft(
+      new QueryClient(),
+      app,
+      defaultsOf(app),
+      unseeded
+    )
+    expect(values.seedMode).toBe("random")
   })
 })
