@@ -18,9 +18,9 @@ function iconsOfLongestVideo(): string[] {
 }
 
 describe("the gallery's longest Video bar", () => {
-  it("draws the length and camera move icons the bar's setting chips draw", () => {
+  it("draws the length icon the bar's setting chips draw, and no camera move", () => {
     const icons = iconsOfLongestVideo().join(" ")
     expect(icons).toContain("lucide-clock")
-    expect(icons).toContain("lucide-move")
+    expect(icons).not.toContain("lucide-move")
   })
 })

@@ -150,7 +150,6 @@ const barChips: ReadonlyArray<{
       { kind: "model" },
       { kind: "aspect" },
       { kind: "input", name: "length" },
-      { kind: "input", name: "cameraMove" },
     ],
   },
   {

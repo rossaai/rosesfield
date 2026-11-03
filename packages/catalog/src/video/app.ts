@@ -1,6 +1,5 @@
 import { taskBinding } from "@rosesfield/generation/bindings"
 import { type AppInput, defineApp } from "#define-app"
-import { cameraMoves } from "#video/camera-moves"
 import { videoEngine } from "#video/comfy/video-engine"
 import { videoAspects } from "#video/comfy/video-sizes"
 import {
@@ -58,16 +57,6 @@ export const app: AppInput = defineApp({
       max: 5,
       step: 1,
       default: 5,
-    },
-    {
-      type: "choice",
-      name: "cameraMove",
-      labelKey: "video.input.cameraMove.label",
-      options: cameraMoves.map((move) => ({
-        value: move.value,
-        labelKey: move.labelKey,
-      })),
-      default: "auto",
     },
     {
       type: "choice",

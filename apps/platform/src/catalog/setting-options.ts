@@ -214,7 +214,6 @@ const options: Readonly<Record<string, LucideIcon>> = {
 
 const pictured: ReadonlySet<string> = new Set([
   "movement",
-  "cameraMove",
   "camera",
   "lens",
   "focus",

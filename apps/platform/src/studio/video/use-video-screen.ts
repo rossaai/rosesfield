@@ -16,28 +16,21 @@ import {
 } from "@/screens/app/use-app-screen"
 import { chipDefaultsOf, type VideoFields } from "@/studio/video/video-fields"
 import {
-  composePrompt,
-  type Preset,
-  presetsOf,
-  splitPrompt,
-  typedPrompt,
-} from "@/studio/video/video-prompt"
-import { graphPrompt, restoredOf } from "@/studio/video/video-restore"
-import {
   defaultsOfTab,
   fieldsOfModel,
   imagesForTab,
   modelForTab,
   modelsOfTab,
+  tabOfInputs,
   type VideoTab,
 } from "@/studio/video/video-tabs"
+
+const graphPrompt = "prompt"
 
 export type VideoPrompt = {
   name: string
   typed: string
-  move: string | null
   setTyped: (typed: string) => void
-  setMove: (move: string | null) => void
 }
 
 export type VideoScreen = {
@@ -47,7 +40,6 @@ export type VideoScreen = {
   setTab: (tab: VideoTab) => void
   fields: VideoFields | null
   isGraph: boolean
-  presets: readonly Preset[]
   prompt: VideoPrompt
   fillFromRun: (run: Run) => void
 }
@@ -122,22 +114,12 @@ function useRestoreOnSeed(
   })
 }
 
-function useVideoPrompt(
-  form: AppForm,
-  fields: VideoFields | null,
-  presets: readonly Preset[]
-): VideoPrompt {
+function videoPromptOf(form: AppForm, fields: VideoFields | null): VideoPrompt {
   const name = fields?.prompt?.name ?? graphPrompt
-  const current = textOf(form.values.inputs[name])
-  const split = splitPrompt(current, presets)
   return {
     name,
-    typed: split.typed,
-    move: split.move,
-    setTyped: (typed) =>
-      form.setInput(name, typedPrompt(current, typed, presets)),
-    setMove: (move) =>
-      form.setInput(name, composePrompt(split.typed, move, presets)),
+    typed: textOf(form.values.inputs[name]),
+    setTyped: (typed) => form.setInput(name, typed),
   }
 }
 
@@ -149,11 +131,10 @@ export function useVideoScreen(
   const state = useAppScreen(app, seeds, onStarted)
   const hosted = state.hosted ?? emptyHosted()
   const [tab, setTabState] = useState<VideoTab>("text-image")
-  const presets = useMemo(() => presetsOf(app.id), [app.id])
   const fields = useMemo(() => fieldsOfModel(hosted.chosen), [hosted.chosen])
   const isGraph = hosted.chosen !== null && hosted.chosen.form === null
   useChipDefaults(state.form, fields)
-  const prompt = useVideoPrompt(state.form, fields, presets)
+  const prompt = videoPromptOf(state.form, fields)
   const { form } = state
   const setTab = (next: VideoTab): void => {
     setTabState(next)
@@ -172,11 +153,7 @@ export function useVideoScreen(
     }
   }
   const restore: Restore = (inputs, model) => {
-    const restored = restoredOf(inputs, model, presets, app)
-    for (const [name, value] of Object.entries(restored.inputs)) {
-      form.setInput(name, value)
-    }
-    setTabState(restored.tab)
+    setTabState(tabOfInputs(inputs, model, app))
   }
   useRestoreOnSeed(form, hosted, restore)
   const fillForm = state.useInputs
@@ -194,7 +171,6 @@ export function useVideoScreen(
     setTab,
     fields,
     isGraph,
-    presets,
     prompt,
     fillFromRun,
   }

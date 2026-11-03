@@ -30,7 +30,6 @@ import {
 } from "lucide-react"
 import type { ReactElement } from "react"
 import { catalogApps } from "@/catalog/catalog-apps"
-import { tCatalog } from "@/copy/t"
 import { t } from "@/gallery/copy.en"
 import {
   composerState,
@@ -135,14 +134,6 @@ function Column(): ReactElement {
           />
         }
       >
-        <StartFrame
-          src={demoVideo}
-          alt={t("sample.output")}
-          title={tCatalog("video.preset.title")}
-          line={t("sample.model")}
-          changeLabel={tCatalog("video.preset.change")}
-          onChange={() => undefined}
-        />
         <DropZone
           title={t("sample.drop.title")}
           line={t("sample.drop.line")}
@@ -167,7 +158,6 @@ function Column(): ReactElement {
               form={sampleForm}
               fields={null}
               lastSeed={null}
-              placed={[]}
             />
           )}
         </div>

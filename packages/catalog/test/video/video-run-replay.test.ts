@@ -47,18 +47,16 @@ describe("a Video run on the LTX 2.5 graph, replayed", () => {
     expect(jobs.map((one) => one.idempotencyKey)).toEqual([runId])
   })
 
-  it("uploads the start frame and holds the camera words in the graph", async () => {
+  it("uploads the start frame and adds no camera words to the prompt", async () => {
     const { workflows } = await submittedRun({
       prompt,
       model: "ltx-2-5",
       startFrame: [startFrameId],
-      cameraMove: "pull-out",
       seed: 9,
     })
     expect(workflows[0]?.["401"]?.inputs.image).toEqual(asset)
-    expect(workflows[0]?.["900"]?.inputs.string_b).toBe(
-      "\nThe camera moves slowly backward, away from the subject."
-    )
+    expect(workflows[0]?.["900"]?.inputs.string_a).toBe(prompt)
+    expect(workflows[0]?.["900"]?.inputs.string_b).toBe("")
     expect(workflows[0]?.["339"]?.inputs.noise_seed).toBe(9)
   })
 

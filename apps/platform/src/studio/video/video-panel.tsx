@@ -3,10 +3,8 @@ import { PromptBlock } from "@rosesfield/ui/components/input-panel"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { type ReactElement, useMemo } from "react"
 import { t, tCatalog } from "@/copy/t"
-import { CatalogPicker, modelNameOf } from "@/screens/app/hosted/catalog-picker"
+import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { pickerModelsOf } from "@/studio/video/picker-models"
-import { PresetCard } from "@/studio/video/preset-card"
-import { shownPresets } from "@/studio/video/preset-samples"
 import type { VideoScreen } from "@/studio/video/use-video-screen"
 import { VideoSettings } from "@/studio/video/video-chips"
 import {
@@ -51,11 +49,8 @@ export function ModeTabs({
   )
 }
 
-const cameraMoveInput = "cameraMove"
-
 function PromptPart({ screen }: { screen: VideoScreen }): ReactElement {
-  const { prompt, presets, state } = screen
-  const words = presets.find((preset) => preset.value === prompt.move)?.words
+  const { prompt, state } = screen
   const problem = state.form.problems.get(prompt.name)
   const label = tCatalog("video.input.prompt.label")
   return (
@@ -70,11 +65,6 @@ function PromptPart({ screen }: { screen: VideoScreen }): ReactElement {
           className="min-h-0 w-full flex-1 resize-none bg-transparent text-body text-ink outline-none placeholder:text-ink-muted"
         />
       </PromptBlock>
-      {words === undefined ? null : (
-        <p className="px-1 text-label text-ink-muted">
-          {tCatalog("video.preset.words", { words })}
-        </p>
-      )}
       {problem === undefined ? null : (
         <p role="alert" className="px-1 text-label text-bug-text">
           {t(problem.key, problem.values)}
@@ -91,20 +81,13 @@ export function VideoPanel({
   app: AppListing
   screen: VideoScreen
 }): ReactElement {
-  const { hosted, tab, fields, state, prompt } = screen
+  const { hosted, tab, fields, state } = screen
   const tabHosted = useMemo(
     () => ({ ...hosted, models: pickerModelsOf(hosted.models, tab, app) }),
     [hosted, tab, app]
   )
-  const presets = useMemo(() => shownPresets(screen.presets), [screen.presets])
   return (
     <div data-slot="video-parts" className="flex flex-1 flex-col gap-s4">
-      <PresetCard
-        presets={presets}
-        move={prompt.move}
-        onMove={prompt.setMove}
-        line={hosted.chosen === null ? "" : modelNameOf(hosted.chosen)}
-      />
       {hosted.chosen === null ? null : (
         <VideoWells slots={slotsOf(fields, tab)} form={state.form} />
       )}
@@ -116,7 +99,6 @@ export function VideoPanel({
           form={state.form}
           fields={fields}
           lastSeed={state.lastSeed}
-          placed={[cameraMoveInput]}
         />
       )}
     </div>

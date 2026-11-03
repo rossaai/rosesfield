@@ -120,10 +120,10 @@ function brokenLinks(workflow: Workflow): string[] {
 }
 
 describe("the Video engine request", () => {
-  it("sends LTX 2.5 text with the camera words, the size, the frames and the seed", async () => {
+  it("sends LTX 2.5 text with the prompt, the size, the frames and the seed", async () => {
     const { submission, workflow } = await submitted(
       ltxTextBinding("720p", "on"),
-      { prompt, cameraMove: "push-in", length: 5 }
+      { prompt, length: 5 }
     )
     expect(submission.ref).toBe(jobId)
     expect(submission.models).toEqual([
@@ -136,7 +136,7 @@ describe("the Video engine request", () => {
     expect(submission.workflowHash).toMatch(/^[0-9a-f]{64}$/)
     expect(workflow["900"]?.inputs).toEqual({
       string_a: prompt,
-      string_b: "\nThe camera moves slowly forward, toward the subject.",
+      string_b: "",
       delimiter: "",
     })
     expect(workflow["364"]?.inputs.text).toEqual(["900", 0])
@@ -155,12 +155,12 @@ describe("the Video engine request", () => {
     expect(brokenLinks(workflow)).toEqual([])
   })
 
-  it("sends the prompt as written when the camera move is auto", async () => {
+  it("sends a 9:16 run of 3 seconds with no sound, and binds no camera move, since Video takes none", async () => {
     const { workflow } = await submitted(
       ltxTextBinding("480p", "off"),
       {
         prompt,
-        cameraMove: "auto",
+        cameraMove: "push-in",
         length: 3,
       },
       "9:16"
@@ -178,7 +178,6 @@ describe("the Video engine request", () => {
   it("sends LTX 2.5 with a start frame as the uploaded asset and no last-frame guide", async () => {
     const { workflow } = await submitted(ltxStartFrameBinding("720p", "on"), {
       prompt,
-      cameraMove: "static",
       length: 5,
       startFrame: [startFrameId],
     })
@@ -211,7 +210,6 @@ describe("the Video engine request", () => {
       ltxFirstLastBinding("480p", "on"),
       {
         prompt,
-        cameraMove: "auto",
         length: 5,
         startFrame: [startFrameId],
         lastFrame: [lastFrameId],
@@ -245,7 +243,6 @@ describe("the Video engine request", () => {
   it("drops the audio track from a two-frame run with no sound", async () => {
     const { workflow } = await submitted(ltxFirstLastBinding("480p", "off"), {
       prompt,
-      cameraMove: "auto",
       length: 5,
       startFrame: [startFrameId],
       lastFrame: [lastFrameId],
@@ -253,15 +250,5 @@ describe("the Video engine request", () => {
     expect(workflow["370"]?.inputs).not.toHaveProperty("audio")
     expect(workflow["460"]?.class_type).toBe("LTXVAddGuide")
     expect(brokenLinks(workflow)).toEqual([])
-  })
-
-  it("refuses a camera move the binding has no words for", async () => {
-    await expect(
-      submitted(ltxTextBinding("720p", "on"), {
-        prompt,
-        cameraMove: "orbit",
-        length: 5,
-      })
-    ).rejects.toMatchObject({ code: "ENGINE_BINDING_INVALID" })
   })
 })

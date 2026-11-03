@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { assetQuery } from "@/api/queries"
 import { exampleDraftOf } from "@/catalog/app-examples"
 import { findCatalogApp } from "@/catalog/catalog-apps"
-import { defaultsOf } from "@/screens/app/app-form"
+import { bodyOf, defaultsOf } from "@/screens/app/app-form"
 import { fillFromDraft } from "@/screens/app/form-fill"
 import { recreateTargetOf } from "@/screens/explore/explore-tile"
 import { mediaOf, showcaseRun } from "@/showcase/showcase"
@@ -131,5 +131,22 @@ describe("Recreate on a showcase example", () => {
       unseeded
     )
     expect(values.seedMode).toBe("random")
+  })
+
+  it("opens Video from the goose example, whose run carried a camera move, with its prompt and sends no camera move", async () => {
+    vi.stubGlobal("fetch", () =>
+      Promise.resolve(new Response(new Blob(["webp"])))
+    )
+    const goose = "cba41fa6-bd1c-4992-9abb-b9d91ed6a998"
+    const video = findCatalogApp("video")
+    if (video === null) {
+      throw new Error("no Video app")
+    }
+    const values = await recreated(goose)
+    expect(String(values.inputs.prompt)).toMatch(
+      /Slow push in toward the throne\.$/
+    )
+    expect(values.inputs.startFrame).toEqual([uploadedId])
+    expect(bodyOf(video, values).inputs).not.toHaveProperty("cameraMove")
   })
 })

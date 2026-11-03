@@ -32,8 +32,8 @@ export const promoFloor = 3
 
 const promoShape = 16 / 9
 
-const presetInputNames: readonly string[] = [exampleInput, "cameraMove"]
-const unsetValues: readonly string[] = ["auto", ownVideo]
+const presetInputNames: readonly string[] = [exampleInput]
+const unsetValues: readonly string[] = [ownVideo]
 
 export function isVisualEntry(entry: ExploreEntry): entry is VisualEntry {
   return entry.kind !== "audio" && entry.aspect !== undefined

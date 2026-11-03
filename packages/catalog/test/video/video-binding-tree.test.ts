@@ -10,6 +10,7 @@ import { z } from "zod"
 import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
 import { listWorkflows } from "#list-workflows"
 import { app } from "#video/app"
+import { cameraMoves, cameraWordsKeyOf } from "#video/camera-moves"
 import {
   ltxFirstLastBinding,
   ltxStartFrameBinding,
@@ -221,9 +222,9 @@ describe("the Video app", () => {
     { name: "a length of 6", inputs: { length: 6 }, path: "length" },
     { name: "1080p", inputs: { resolution: "1080p" }, path: "resolution" },
     {
-      name: "an unknown move",
-      inputs: { cameraMove: "orbit" },
-      path: "cameraMove",
+      name: "a camera move, which Video takes in its prompt",
+      inputs: { cameraMove: "push-in" },
+      path: "",
     },
   ])("refuses $name before a binding is read", ({ inputs, path }) => {
     const result = checked({ prompt, ...inputs })
@@ -238,7 +239,7 @@ describe("the Video app", () => {
     expect(checked({ prompt }, 2).success).toBe(false)
   })
 
-  it("has a string for every key it names, and words for every camera move", () => {
+  it("has a string for every key it names, and a name and words for every camera move Remake plans", () => {
     const keys = [
       definition.nameKey,
       "video.line",
@@ -251,12 +252,10 @@ describe("the Video app", () => {
               .map((option) => option.labelKey)
               .filter((key) => key !== "choice.auto")
           : []),
-        ...(input.name === "cameraMove" && input.type === "choice"
-          ? input.options
-              .filter((option) => option.value !== "auto")
-              .map((option) => `video.cameraMove.${option.value}.words`)
-          : []),
       ]),
+      ...cameraMoves
+        .filter((move) => move.value !== "auto")
+        .flatMap((move) => [move.labelKey, cameraWordsKeyOf(move.value)]),
     ]
     for (const key of keys) {
       expect(videoCopy[key], key).toBeTypeOf("string")
