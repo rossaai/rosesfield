@@ -64,12 +64,15 @@ function useSeededValues(
   const draft = useRouterState({
     select: (state) => state.location.state.draft,
   })
-  const seeded = useRef(false)
+  const seeded = useRef<{ draft: Draft | undefined } | null>(null)
   useEffect(() => {
-    if (seeded.current) {
+    if (
+      seeded.current !== null &&
+      (draft === undefined || seeded.current.draft === draft)
+    ) {
       return
     }
-    seeded.current = true
+    seeded.current = { draft }
     const base = defaultsOf(app)
     const fill = async (): Promise<void> => {
       const fromRun =

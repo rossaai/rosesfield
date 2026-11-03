@@ -199,3 +199,69 @@ describe("Recreate from the Library", () => {
     expect(form.values.inputs.example).toBe("own")
   })
 })
+
+describe("a Recreate draft that arrives while the app is open", () => {
+  function openApp(): {
+    router: ReturnType<typeof createRouter>
+    prompts: () => string
+  } {
+    if (app === null) {
+      throw new Error("no video app")
+    }
+    const opened = app
+    const seen: AppForm[] = []
+    function Probe(): ReactElement | null {
+      seen.push(useAppForm(opened, { use: undefined, from: undefined }))
+      return null
+    }
+    const router = createRouter({
+      routeTree: createRootRoute({ component: Probe }),
+      history: createMemoryHistory(),
+    })
+    render(
+      <QueryClientProvider client={clientWithRecords()}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    )
+    return {
+      router,
+      prompts: () => String(seen.at(-1)?.values.inputs.prompt ?? ""),
+    }
+  }
+
+  function draftOf(prompt: string) {
+    return { prompt, assetIds: [], characterIds: [], inputs: { prompt } }
+  }
+
+  it("fills the open form with the new draft, as Recreate in How it works does", async () => {
+    const opened = openApp()
+    await act(() =>
+      opened.router.navigate({
+        to: "/",
+        state: { draft: draftOf("A goose on a throne") },
+      })
+    )
+    await waitFor(() => expect(opened.prompts()).toBe("A goose on a throne"))
+    await act(() =>
+      opened.router.navigate({
+        to: "/",
+        state: { draft: draftOf("A kite over a hill") },
+      })
+    )
+    await waitFor(() => expect(opened.prompts()).toBe("A kite over a hill"))
+  })
+
+  it("control: keeps what you typed while no new draft arrives", async () => {
+    const opened = openApp()
+    await act(() =>
+      opened.router.navigate({
+        to: "/",
+        state: { draft: draftOf("A goose on a throne") },
+      })
+    )
+    await waitFor(() => expect(opened.prompts()).toBe("A goose on a throne"))
+    await act(() => opened.router.navigate({ to: "/" }))
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(opened.prompts()).toBe("A goose on a throne")
+  })
+})
