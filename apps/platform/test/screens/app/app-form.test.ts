@@ -1,4 +1,5 @@
-import { type Run, run } from "@rosesfield/contract"
+import { findApp } from "@rosesfield/catalog"
+import { appListing, type Run, run } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import {
   bodyOf,
@@ -178,5 +179,40 @@ describe("valuesFromRun", () => {
     expect(values.seedMode).toBe("fixed")
     expect(values.count).toBe(2)
     expect(values.aspectRatio).toBe("1:1")
+  })
+})
+
+describe("valuesFromRun on a run whose model the app no longer offers", () => {
+  const motion = appListing.parse(findApp("motion"))
+
+  function motionRun(model: string): Run {
+    return run.parse({
+      id: "8e2f3a40-5b6c-4d7e-8f90-a1b2c3d4e5f6",
+      appId: "motion",
+      status: "done",
+      inputs: { model, target: "the man in the red coat" },
+      count: 1,
+      aspectRatio: null,
+      seed: 5,
+      outputs: [],
+      progress: null,
+      engine: { adapter: "demo", models: [], workflowHash: null },
+      cost: null,
+      origin: "demo",
+      failure: null,
+      createdAt: "2026-10-17T10:00:00.000Z",
+      finishedAt: "2026-10-17T10:00:03.000Z",
+    })
+  }
+
+  it("opens on the app's own model, never the removed guide model the gateway refuses", () => {
+    const values = valuesFromRun(motion, motionRun("ltx-2-3-guide"))
+    expect(values.inputs.model).toBe(defaultsOf(motion).inputs.model)
+  })
+
+  it("control: keeps a model the app still offers", () => {
+    const model = "ltx-2-3-control"
+    const values = valuesFromRun(motion, motionRun(model))
+    expect(values.inputs.model).toBe(model)
   })
 })

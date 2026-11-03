@@ -69,6 +69,14 @@ export function isHostedRun(run: Run): boolean {
   return typeof model === "string" && isHostedModelId(model)
 }
 
+function isOffered(input: InputDefinition, value: FieldValue): boolean {
+  return (
+    input.type !== "choice" ||
+    typeof value !== "string" ||
+    input.options.some((option) => option.value === value)
+  )
+}
+
 export function valuesFromRun(app: AppListing, run: Run): FormValues {
   const base = defaultsOf(app)
   if (isHostedRun(run)) {
@@ -77,7 +85,7 @@ export function valuesFromRun(app: AppListing, run: Run): FormValues {
   const inputs: Record<string, FieldValue> = { ...base.inputs }
   for (const input of app.inputs) {
     const value = run.inputs[input.name]
-    if (value !== undefined) {
+    if (value !== undefined && isOffered(input, value)) {
       inputs[input.name] = Array.isArray(value) ? [...value] : value
     }
   }

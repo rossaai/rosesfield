@@ -199,7 +199,7 @@ describe("the How card's model name in a narrow card", () => {
     await waitFor(() => expect(cardName()).toBe("MiniMax H3"))
     const classes = cardNameElement().classList
     expect(classes.contains("truncate")).toBe(true)
-    expect(classes.contains("wrap-break-word")).toBe(false)
+    expect([...classes].filter((one) => one.includes("wrap"))).toEqual([])
   })
 
   it("shows the whole name in a tooltip when the card cuts it", async () => {
