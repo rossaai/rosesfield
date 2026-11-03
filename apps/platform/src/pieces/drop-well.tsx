@@ -216,7 +216,7 @@ function WellFoot(
           actions={props.actions ?? []}
         />
       )}
-      {props.max > 1 && props.ids.length > 0 ? (
+      {props.max > 1 && props.isFull ? (
         <span className="text-caption text-ink-muted">
           {t("field.asset.count", { count: props.ids.length, max: props.max })}
         </span>
