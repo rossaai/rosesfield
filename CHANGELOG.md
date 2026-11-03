@@ -2,6 +2,20 @@
 
 Each release is a tag `v<version>` on `main` and a GitHub release with the same notes. Versions follow [Semantic Versioning](https://semver.org). Publishing a release deploys it, per [docs/self-host.md](docs/self-host.md).
 
+## 0.2.1, 2026-11-02
+
+- Motion holds faces and legs through fast motion. Its LTX 2.5 guide graph now refines a latent that LTX 2.5's temporal upscaler makes 4 times longer, conditioned at 4 times the guide's frame rate up to 60 fps, the cap Lightricks' own temporal pipeline sets, and keeps every fourth frame, per [workflows/motion-guide-ltx-2-5](workflows/motion-guide-ltx-2-5/README.md). A run costs about twice what it did, and Generate shows its measured price.
+- Video, Shot, Video edit and Lipsync open on the first model of their list. A model whose length is automatic no longer empties the list.
+- Generate waits, with no price, until an app's model list arrives, so a press never prices or starts a model you did not pick. This covers Characters, Layers and Storyboard too.
+- A model list answers from its kept copy when an earlier read of one model's schema failed.
+- Motion's examples keep the seed you set, in the draft and in the final.
+- Recreate is one action with one icon on every surface, and an AI Influencer template opens on the model its tile names.
+- Speech's How it works names the model its picker opens on.
+- A Library example link opens its example on its own model, even after you used the app.
+- A model name the picker cuts shows whole in a tooltip.
+- A measured price belongs to the graph that ran it, so a changed graph never shows an earlier graph's price as measured.
+- Motion's guide graph declares the two packs its sound nodes come from, and `bun run packs:check` refuses a graph that runs a node from a pack its entry does not declare.
+
 ## 0.2.0, 2026-10-30
 
 - AI Influencer, a new featured app. Pick traits, many of them absurd, such as a capybara, frog or mantis head on a human body, and get one character sheet on white: a portrait beside the same character whole body. It opens on GPT Image 2.5 at medium quality, and its Library holds four templates made in the app that you can remix. Use in Motion sends a sheet to Motion.
