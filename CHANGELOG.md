@@ -2,6 +2,12 @@
 
 Each release is a tag `v<version>` on `main` and a GitHub release with the same notes. Versions follow [Semantic Versioning](https://semver.org). Publishing a release deploys it, per [docs/self-host.md](docs/self-host.md).
 
+## 0.2.3, 2026-11-03
+
+- The README shows AI Influencer, then Motion: the capybara in a brown suit that AI Influencer made runs down a beach road and catches a garbage truck in Motion. It takes the place of the Video edit example.
+- The README's Motion example is Grab and run as Motion's Library shows it, made on the 60 fps temporal pass.
+- Explore no longer shows the Video edit example that zooms into an eye.
+
 ## 0.2.2, 2026-11-03
 
 - Motion has two tabs, Move and Swap. Its model picker lists models, LTX 2.5 and LTX 2.3, and the technique each one runs is the app's choice.
