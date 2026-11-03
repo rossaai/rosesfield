@@ -12,7 +12,7 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router"
-import { cleanup, render, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react"
 import { useState } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { defaultsOf, type FormValues } from "@/screens/app/app-form"
@@ -166,5 +166,56 @@ describe("the How card's model, with no example to show", () => {
     const names = await openedNames()
     expect(names.picker).toBe(modelNameOf(chatterbox))
     expect(names.card).toBe(modelNameOf(chatterbox))
+  })
+})
+
+const minimaxH3 = hostedOf("minimax/h3", "MiniMax H3")
+
+function cardNameElement(): HTMLElement {
+  const shown = document.querySelector<HTMLElement>(
+    "[data-step=choose] [data-slot=how-model]"
+  )
+  if (shown === null) {
+    throw new Error("the How card names no model")
+  }
+  return shown
+}
+
+function cutToRoom(text: number, room: number): void {
+  const shown = cardNameElement()
+  Object.defineProperty(shown, "scrollWidth", { value: text })
+  Object.defineProperty(shown, "clientWidth", { value: room })
+}
+
+function tipWords(): string | null {
+  return (
+    document.querySelector("[data-slot='tooltip-content']")?.textContent ?? null
+  )
+}
+
+describe("the How card's model name in a narrow card", () => {
+  it("sets the name on one line cut at its end, never broken inside a word", async () => {
+    renderSpeech([minimaxH3])
+    await waitFor(() => expect(cardName()).toBe("MiniMax H3"))
+    const classes = cardNameElement().classList
+    expect(classes.contains("truncate")).toBe(true)
+    expect(classes.contains("wrap-break-word")).toBe(false)
+  })
+
+  it("shows the whole name in a tooltip when the card cuts it", async () => {
+    renderSpeech([minimaxH3])
+    await waitFor(() => expect(cardName()).toBe("MiniMax H3"))
+    cutToRoom(180, 120)
+    fireEvent.focus(cardNameElement())
+    await waitFor(() => expect(tipWords()).toBe("MiniMax H3"))
+  })
+
+  it("control: shows no tooltip when the whole name fits", async () => {
+    renderSpeech([minimaxH3])
+    await waitFor(() => expect(cardName()).toBe("MiniMax H3"))
+    cutToRoom(120, 180)
+    fireEvent.focus(cardNameElement())
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(tipWords()).toBeNull()
   })
 })

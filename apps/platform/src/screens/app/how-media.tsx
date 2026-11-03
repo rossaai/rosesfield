@@ -6,7 +6,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@rosesfield/ui/components/tooltip"
-import type { ReactElement, ReactNode } from "react"
+import { isCut } from "@rosesfield/ui/lib/is-cut"
+import { type ReactElement, type ReactNode, useRef, useState } from "react"
 import { tCatalog } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
 import { KindFlow, MadeDiscs, TakenDiscs } from "@/pieces/kind-discs"
@@ -75,6 +76,30 @@ export function PromptMedia({ prompt }: { prompt: string }): ReactElement {
   )
 }
 
+function ModelName({ model }: { model: string }): ReactElement {
+  const name = useRef<HTMLSpanElement>(null)
+  const [isNameShown, setNameShown] = useState(false)
+  return (
+    <Tooltip
+      open={isNameShown}
+      onOpenChange={(open) => setNameShown(open && isCut(name.current))}
+    >
+      <TooltipTrigger
+        render={
+          <span
+            ref={name}
+            data-slot="how-model"
+            className="min-w-0 cursor-default truncate text-title text-ink"
+          />
+        }
+      >
+        {model}
+      </TooltipTrigger>
+      <TooltipContent align="start">{model}</TooltipContent>
+    </Tooltip>
+  )
+}
+
 function ModelCard({
   model,
   lab,
@@ -98,12 +123,7 @@ function ModelCard({
             </span>
           </span>
         )}
-        <span
-          data-slot="how-model"
-          className="min-w-0 text-title text-ink wrap-break-word"
-        >
-          {model}
-        </span>
+        <ModelName model={model} />
       </div>
     </div>
   )
