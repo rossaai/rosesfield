@@ -285,7 +285,7 @@ describe("your own video's chain in Motion", () => {
     const { result } = renderOwn(null, unpriced, "720p")
     await waitFor(() =>
       expect(result.current?.priceNote).toBe(
-        "25.65 Comfy credits, measured on a 4-second 480p run, plus reading your video, which no run has measured yet"
+        "45.05 Comfy credits, what measured runs cost for a 4-second clip at 480p, plus reading your video, which no run has measured yet"
       )
     )
     expect(result.current?.start.priceValue).toBeNull()
@@ -293,7 +293,7 @@ describe("your own video's chain in Motion", () => {
     await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
     await waitFor(() =>
       expect(result.current?.priceNote).toBe(
-        "32.35 Comfy credits, measured on a 4-second 720p run"
+        "32.35 Comfy credits, what measured runs cost for a 4-second clip at 720p"
       )
     )
     expect(result.current?.start.priceValue).not.toBeNull()
