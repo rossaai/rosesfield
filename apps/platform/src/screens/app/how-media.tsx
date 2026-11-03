@@ -1,5 +1,5 @@
 import { labOfModel } from "@rosesfield/catalog/comfy"
-import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
+import type { AppListing } from "@rosesfield/contract"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import {
   Tooltip,
@@ -7,13 +7,10 @@ import {
   TooltipTrigger,
 } from "@rosesfield/ui/components/tooltip"
 import type { ReactElement, ReactNode } from "react"
-import { isAssetInput } from "@/catalog/app-facts"
 import { tCatalog } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
 import { KindFlow, MadeDiscs, TakenDiscs } from "@/pieces/kind-discs"
 import { LabMark } from "@/pieces/lab-mark"
-import { runLabOf, runModel } from "@/pieces/run/run-facts"
-import { inputRowsOf } from "@/pieces/run/run-inputs"
 import { chosenLabOf, modelNameOf } from "@/screens/app/hosted/catalog-picker"
 import { useOpeningModel } from "@/screens/app/hosted/use-hosted-model"
 import { mediaOf } from "@/showcase/showcase"
@@ -78,89 +75,37 @@ export function PromptMedia({ prompt }: { prompt: string }): ReactElement {
   )
 }
 
-type SettingRow = { key: string; label: string; value: ReactNode }
-
 function ModelCard({
   model,
   lab,
-  rows,
 }: {
-  model: string | null
+  model: string
   lab: string | null
-  rows: readonly SettingRow[]
 }): ReactElement {
   return (
     <div
       data-slot="how-settings"
       className="flex size-full flex-col justify-center gap-s5 p-s6"
     >
-      {model === null ? null : (
-        <div className="flex min-w-0 items-center gap-s3">
-          {lab === null ? null : (
-            <span
-              aria-hidden="true"
-              className="flex size-12 shrink-0 items-center justify-center rounded-card bg-(--ground)"
-            >
-              <span className="flex scale-150">
-                <LabMark maker={lab} />
-              </span>
-            </span>
-          )}
+      <div className="flex min-w-0 items-center gap-s3">
+        {lab === null ? null : (
           <span
-            data-slot="how-model"
-            className="min-w-0 text-title text-ink [overflow-wrap:anywhere]"
+            aria-hidden="true"
+            className="flex size-12 shrink-0 items-center justify-center rounded-card bg-(--ground)"
           >
-            {model}
+            <span className="flex scale-150">
+              <LabMark maker={lab} />
+            </span>
           </span>
-        </div>
-      )}
-      {rows.length === 0 ? null : (
-        <dl className="flex flex-col">
-          {rows.map((row) => (
-            <div
-              key={row.key}
-              className="flex items-baseline justify-between gap-s3 border-(--line) border-t py-s2 text-body"
-            >
-              <dt className="text-ink-muted">{row.label}</dt>
-              <dd className="min-w-0 truncate text-ink">{row.value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
+        )}
+        <span
+          data-slot="how-model"
+          className="min-w-0 text-title text-ink wrap-break-word"
+        >
+          {model}
+        </span>
+      </div>
     </div>
-  )
-}
-
-function isSettingInput(input: InputDefinition | undefined): boolean {
-  return (
-    input === undefined ||
-    (!isAssetInput(input) &&
-      input.type !== "prompt" &&
-      input.type !== "seed" &&
-      input.name !== modelInputName)
-  )
-}
-
-export function RunSettings({
-  app,
-  run,
-}: {
-  app: AppListing
-  run: Run
-}): ReactElement {
-  const rows = inputRowsOf(app, run).filter((row) =>
-    isSettingInput(app.inputs.find((one) => one.name === row.key))
-  )
-  return (
-    <ModelCard
-      model={runModel(run, app)}
-      lab={runLabOf(run)}
-      rows={rows.map((row) => ({
-        key: row.key,
-        label: row.label,
-        value: row.value,
-      }))}
-    />
   )
 }
 
@@ -195,7 +140,7 @@ export function DefaultSettings({ app }: { app: AppListing }): ReactElement {
       <KindFlow app={app} />
     </div>
   ) : (
-    <ModelCard model={shown.name} lab={shown.lab} rows={[]} />
+    <ModelCard model={shown.name} lab={shown.lab} />
   )
 }
 

@@ -18,7 +18,6 @@ import {
   samplesOf,
   stepsOf,
 } from "@/screens/app/how-it-works"
-import { RunSettings } from "@/screens/app/how-media"
 import { publishedQuery, type SharedOutput } from "@/screens/explore/share-api"
 import { mediaOf, showcaseOf } from "@/showcase/showcase"
 
@@ -32,7 +31,6 @@ const motion = appListing.parse(findApp("motion"))
 const lipsync = appListing.parse(findApp("lipsync"))
 const image = appListing.parse(findApp("image"))
 const relight = appListing.parse(findApp("relight"))
-const audio = appListing.parse(findApp("audio"))
 
 const otherId = "93e9078d-0000-4000-8000-0000000000ff"
 
@@ -159,6 +157,29 @@ describe("How it works", () => {
     expect(ownExampleOf(video, [failed, demo, other])).toBeNull()
   })
 })
+
+const shot = appListing.parse(findApp("shot"))
+
+function videoModel(
+  id: string,
+  name: string,
+  kind: "graph" | "hosted"
+): CatalogModel {
+  return {
+    id,
+    kind,
+    maker: "Lightricks",
+    name,
+    nameKey: null,
+    task: "text-to-video",
+    tags: [],
+    form: null,
+  }
+}
+
+const minimaxH3 = videoModel("minimax/minimax-h3", "MiniMax H3", "hosted")
+
+const ltx25 = videoModel("ltx-2-5", "LTX 2.5", "graph")
 
 const lipsyncModels: readonly CatalogModel[] = [
   {
@@ -289,33 +310,62 @@ describe("How it works, one composition for every app", () => {
     }
     const prompt = steps[0]?.querySelector("[data-slot=how-prompt-text]")
     expect(prompt?.className.split(" ")).toContain("line-clamp-3")
-    const labels = [
-      ...(steps[1]?.querySelectorAll("[data-slot=how-settings] dt") ?? []),
-    ].map((label) => label.textContent)
-    expect(labels.some((label) => /seed/i.test(label ?? ""))).toBe(false)
+    expect(steps[1]?.textContent ?? "").not.toMatch(/seed/i)
     expect(
-      steps[1]?.querySelector("[data-slot=how-settings]")?.textContent
-    ).toContain("GPT Image 2.5 Sunburst")
+      steps[2]?.querySelector("[data-slot=how-made-with]")?.textContent
+    ).toBe("Made with GPT Image 2.5 Sunburst")
   })
 
-  it("lists an example's settings with no seed row", () => {
-    render(
-      <RunSettings
-        app={audio}
-        run={run.parse({
-          ...madeVideo,
-          appId: "audio",
-          inputs: { prompt: "Here is the one change", language: "en" },
-          seed: 1488584158,
-          aspectRatio: null,
-        })}
-      />
+  it("names the model Video's picker opens on, and captions the example with the model that made it", async () => {
+    renderHow(() => <HowItWorks app={video} />, [], {
+      appId: video.id,
+      models: [minimaxH3, ltx25],
+    })
+    const steps = await stepsShown(3)
+    await waitFor(() =>
+      expect(
+        steps[1]?.querySelector("[data-slot=how-model]")?.textContent
+      ).toBe("MiniMax H3")
     )
-    const labels = [
-      ...document.querySelectorAll("[data-slot=how-settings] dt"),
-    ].map((label) => label.textContent ?? "")
-    expect(labels.length).toBeGreaterThan(0)
-    expect(labels.some((label) => /seed/i.test(label))).toBe(false)
-    expect(document.body.textContent).not.toContain("1488584158")
+    expect(
+      steps[2]?.querySelector("[data-slot=how-made-with]")?.textContent
+    ).toBe("Made with LTX 2.5")
+    expect(steps[1]?.textContent).not.toContain("LTX 2.5")
+  })
+
+  it("follows the picker when it opens on LTX 2.5, so the card names the model the list puts first, the control", async () => {
+    renderHow(() => <HowItWorks app={video} />, [], {
+      appId: video.id,
+      models: [ltx25, minimaxH3],
+    })
+    const steps = await stepsShown(3)
+    await waitFor(() =>
+      expect(
+        steps[1]?.querySelector("[data-slot=how-model]")?.textContent
+      ).toBe("LTX 2.5")
+    )
+  })
+
+  it("names the model Shot opens on in place of the model of its example", async () => {
+    renderHow(() => <HowItWorks app={shot} />, [], {
+      appId: shot.id,
+      models: [minimaxH3, ltx25],
+    })
+    const steps = await stepsShown(3)
+    await waitFor(() =>
+      expect(
+        steps[1]?.querySelector("[data-slot=how-model]")?.textContent
+      ).toBe("MiniMax H3")
+    )
+    expect(
+      steps[2]?.querySelector("[data-slot=how-made-with]")?.textContent
+    ).toBe("Made with LTX 2.5")
+  })
+
+  it("captions your own run with its model and names the opening model on the card", () => {
+    const steps = stepsOf(video, [], [], madeVideo)
+    expect(steps[2]?.caption).toBe("Made with LTX 2.5")
+    expect(steps[0]?.caption).toBeUndefined()
+    expect(stepsOf(video, [], [])[2]?.caption).toBeUndefined()
   })
 })
