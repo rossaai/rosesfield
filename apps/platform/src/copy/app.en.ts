@@ -23,6 +23,7 @@ export const appCopy = {
   "app.how.model.line": "Each model has its own strengths and its own price.",
   "app.how.result.title": "Get your result",
   "app.how.result.line": "It lands in History and in your library.",
+  "app.how.result.madeWith": "Made with {model}",
   "app.fan.headline": "Make it with",
   "app.tools.open": "Generate",
   "run.generate": "Generate",

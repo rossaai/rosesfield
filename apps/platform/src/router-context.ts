@@ -11,6 +11,7 @@ export type Draft = {
   characterIds: string[]
   inputs?: Run["inputs"]
   aspectRatio?: string | null
+  seed?: number
   input?: { src: string; name: string }
 }
 

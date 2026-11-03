@@ -151,6 +151,21 @@ export function withInputs(
   }
 }
 
+function withSeed(
+  app: AppListing,
+  values: FormValues,
+  seed: number | undefined
+): FormValues {
+  const input = app.inputs.find((one) => one.type === "seed")
+  return seed === undefined || input === undefined
+    ? values
+    : {
+        ...values,
+        inputs: { ...values.inputs, [input.name]: seed },
+        seedMode: "fixed",
+      }
+}
+
 export type UploadFile = (file: Blob) => Promise<Asset>
 
 const uploadQuietly: UploadFile = (file) =>
@@ -193,7 +208,11 @@ export async function fillFromDraft(
     draft.inputs === undefined
       ? values
       : withInputs(app, values, draft.inputs, draft.aspectRatio ?? null)
-  const prompted = withPrompt(app, given, draft.prompt)
+  const prompted = withPrompt(
+    app,
+    withSeed(app, given, draft.seed),
+    draft.prompt
+  )
   const exampled =
     draft.input === undefined
       ? prompted

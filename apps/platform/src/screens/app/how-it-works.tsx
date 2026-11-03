@@ -1,4 +1,5 @@
 import type { AppListing, Run } from "@rosesfield/contract"
+import { Badge } from "@rosesfield/ui/components/badge"
 import { Button } from "@rosesfield/ui/components/button"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { useQuery } from "@tanstack/react-query"
@@ -7,13 +8,13 @@ import type { ReactElement, ReactNode } from "react"
 import { appLine, promptInputOf } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { RecreateWords } from "@/pieces/run/recreate"
+import { runModel } from "@/pieces/run/run-facts"
 import {
   AssetMedia,
   DefaultSettings,
   DiscMedia,
   FileMedia,
   PromptMedia,
-  RunSettings,
 } from "@/screens/app/how-media"
 import {
   sharedEntries,
@@ -43,6 +44,7 @@ export type HowStep = {
   media: ReactNode
   form: "picture" | "words"
   action?: ReactNode
+  caption?: string
 }
 
 export function samplesOf(
@@ -164,6 +166,12 @@ type StepMedia = {
   media: Record<HowStep["id"], ReactNode>
   forms: Record<HowStep["id"], HowStep["form"]>
   action: ReactNode | null
+  caption: string | null
+}
+
+function madeWithOf(app: AppListing, run: Run): string | null {
+  const model = runModel(run, app)
+  return model === null ? null : t("app.how.result.madeWith", { model })
 }
 
 function showcaseMedia(
@@ -183,7 +191,7 @@ function showcaseMedia(
         ) : (
           <PromptMedia prompt={prompt} />
         ),
-      choose: <RunSettings app={app} run={item.run} />,
+      choose: <DefaultSettings app={app} />,
       get:
         result === undefined ? (
           <DiscMedia app={app} side="made" />
@@ -198,6 +206,7 @@ function showcaseMedia(
     },
     action:
       result === undefined ? null : <RecreateLink app={app} sample={result} />,
+    caption: result === undefined ? null : madeWithOf(app, result.run),
   }
 }
 
@@ -215,7 +224,7 @@ function ownMedia(app: AppListing, run: Run): StepMedia {
         ) : (
           <PromptMedia prompt={prompt} />
         ),
-      choose: <RunSettings app={app} run={run} />,
+      choose: <DefaultSettings app={app} />,
       get:
         output === undefined ? (
           <DiscMedia app={app} side="made" />
@@ -229,6 +238,7 @@ function ownMedia(app: AppListing, run: Run): StepMedia {
       get: "picture",
     },
     action: <OwnRecreate app={app} run={run} />,
+    caption: output === undefined ? null : madeWithOf(app, run),
   }
 }
 
@@ -241,6 +251,7 @@ function plainMedia(app: AppListing): StepMedia {
     },
     forms: { add: "words", choose: "words", get: "words" },
     action: null,
+    caption: null,
   }
 }
 
@@ -268,6 +279,9 @@ export function stepsOf(
     media: shown.media[id],
     form: shown.forms[id],
     ...(id === "get" && shown.action !== null ? { action: shown.action } : {}),
+    ...(id === "get" && shown.caption !== null
+      ? { caption: shown.caption }
+      : {}),
   }))
 }
 
@@ -306,6 +320,14 @@ function StepCard({ step }: { step: HowStep }): ReactElement {
           )}
         >
           {step.media}
+          {step.caption === undefined ? null : (
+            <span
+              data-slot="how-made-with"
+              className="absolute start-s3 top-s3 flex"
+            >
+              <Badge tone="glass">{step.caption}</Badge>
+            </span>
+          )}
           {step.action === undefined ? null : (
             <span className="absolute end-s3 bottom-s3 flex" data-density="row">
               {step.action}

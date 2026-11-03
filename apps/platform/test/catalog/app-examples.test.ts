@@ -30,7 +30,7 @@ describe("the examples an app's Library shows", () => {
     expect(appExamplesOf([grab])).toHaveLength(1)
   })
 
-  it("fills Motion with the example, its guided render and its 1080p, and with its resolution only where Motion offers it", () => {
+  it("fills Motion with the example, its guided render, its 1080p and the seed of the result it shows, and with its resolution only where Motion offers it", () => {
     expect(exampleDraftOf("motion", "grab-and-run")).toEqual({
       prompt: "",
       assetIds: [],
@@ -40,6 +40,7 @@ describe("the examples an app's Library shows", () => {
         model: "ltx-2-5-guide",
         resolution: "1080p",
       },
+      seed: 154_501_155,
     })
     expect(draftOf(exampleOf("grab-and-run"), ["480p", "720p"]).inputs).toEqual(
       { example: "grab-and-run", model: "ltx-2-5-guide" }
