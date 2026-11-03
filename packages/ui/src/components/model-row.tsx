@@ -10,7 +10,14 @@ import {
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { CheckIcon } from "lucide-react"
-import { memo, type ReactElement, type ReactNode } from "react"
+import {
+  memo,
+  type ReactElement,
+  type ReactNode,
+  type RefObject,
+  useRef,
+  useState,
+} from "react"
 
 type ModelPickerTag = {
   label: string
@@ -138,12 +145,22 @@ function RowBadge({ badge }: { badge: ModelBadge }): ReactElement {
   )
 }
 
-function RowName({ row }: { row: ModelPickerRow }): ReactElement {
+function RowName({
+  row,
+  nameRef,
+}: {
+  row: ModelPickerRow
+  nameRef: RefObject<HTMLSpanElement | null>
+}): ReactElement {
   const facts = row.badges.filter((badge) => badge.kind !== "openWeights")
   const weights = row.badges.filter((badge) => badge.kind === "openWeights")
   return (
     <span className="flex min-w-0 items-center">
-      <span data-slot="model-row-name" className="truncate text-body text-ink">
+      <span
+        ref={nameRef}
+        data-slot="model-row-name"
+        className="truncate text-body text-ink"
+      >
         {row.name}
       </span>
       {facts.length === 0 ? null : (
@@ -275,12 +292,64 @@ type ModelRowProps = {
   onChoose: (id: string) => void
 }
 
+function isCut(element: HTMLElement | null): boolean {
+  return element !== null && element.scrollWidth > element.clientWidth
+}
+
+type RowOptionProps = {
+  row: ModelPickerRow
+  isChosen: boolean
+  nameRef: RefObject<HTMLSpanElement | null>
+  onChoose: (id: string) => void
+}
+
+function RowOption({
+  row,
+  isChosen,
+  nameRef,
+  onChoose,
+}: RowOptionProps): ReactElement {
+  const [isNameShown, setNameShown] = useState(false)
+  return (
+    <Tooltip
+      open={isNameShown}
+      onOpenChange={(open) => setNameShown(open && isCut(nameRef.current))}
+    >
+      <TooltipTrigger
+        render={
+          <button
+            type="button"
+            role="option"
+            aria-selected={isChosen}
+            aria-label={
+              row.price === undefined
+                ? row.name
+                : `${row.name}, ${row.price.name}`
+            }
+            data-model={row.id}
+            className={cn(
+              "absolute inset-0 rounded-cell outline-none group-data-[chosen=no]/row:hover:bg-(--tint)",
+              motion.tint,
+              interaction.ring
+            )}
+            onClick={() => onChoose(row.id)}
+          />
+        }
+      />
+      <TooltipContent align="start" className="pointer-events-none">
+        {row.name}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
 function ModelRowView({
   row,
   isChosen,
   isPricing,
   onChoose,
 }: ModelRowProps): ReactElement {
+  const nameRef = useRef<HTMLSpanElement>(null)
   return (
     <div
       role="none"
@@ -289,20 +358,11 @@ function ModelRowView({
       data-ground={isChosen ? "surface" : undefined}
       className="group/row relative mx-s3 h-13 rounded-cell data-[chosen=yes]:bg-surface"
     >
-      <button
-        type="button"
-        role="option"
-        aria-selected={isChosen}
-        aria-label={
-          row.price === undefined ? row.name : `${row.name}, ${row.price.name}`
-        }
-        data-model={row.id}
-        className={cn(
-          "absolute inset-0 rounded-cell outline-none group-data-[chosen=no]/row:hover:bg-(--tint)",
-          motion.tint,
-          interaction.ring
-        )}
-        onClick={() => onChoose(row.id)}
+      <RowOption
+        row={row}
+        isChosen={isChosen}
+        nameRef={nameRef}
+        onChoose={onChoose}
       />
       <span
         role="none"
@@ -315,7 +375,7 @@ function ModelRowView({
       >
         <RowMark row={row} />
         <span className="ms-s2 flex min-w-0 flex-1 flex-col">
-          <RowName row={row} />
+          <RowName row={row} nameRef={nameRef} />
           <RowCapabilities row={row} />
         </span>
         <RowPrice price={row.price} isPricing={isPricing} />
