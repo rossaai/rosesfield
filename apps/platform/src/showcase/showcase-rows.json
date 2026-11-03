@@ -223,31 +223,6 @@
     "madeAt": "2026-10-29T09:13:14.381Z"
   },
   {
-    "runId": "a0b0265f-8c88-4d39-88a0-3fc1a68f7872",
-    "file": "push-into-eye-48fps.mp4",
-    "input": {
-      "file": "push-into-eye.mp4",
-      "name": "source"
-    },
-    "appId": "video-edit",
-    "kind": "video",
-    "width": 540,
-    "height": 720,
-    "model": "google-research/frame-interpolation",
-    "prompt": null,
-    "inputs": {
-      "mode": "frame-rate",
-      "model": "film",
-      "factor": "2x",
-      "keepSound": "on"
-    },
-    "aspectRatio": null,
-    "credits": 3.31,
-    "seconds": 30.1,
-    "madeAt": "2026-10-22T03:57:28Z",
-    "from": "push-into-eye.mp4"
-  },
-  {
     "runId": "78913fc6-0089-4427-8eaa-8c30ad194298",
     "file": "hose-garden.webp",
     "appId": "image",

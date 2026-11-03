@@ -49,7 +49,7 @@ Your Comfy key is the only sign-in, and each run spends credits from your own Co
   <tr>
     <td align="center"><img alt="A woman waters a garden with a hose, then the same photo where the water is a stream of orange and magenta petals" src="docs/media/examples/hose.webp" height="300"><br><b>Image, then Edit</b></td>
     <td align="center"><img alt="A man in a bucket hat runs toward the camera down a cobbled street, with two police officers behind him" src="docs/media/examples/motion.webp" height="300"><br><b>Motion</b></td>
-    <td align="center"><img alt="A close-up of a brown eye, from a clip at twice its frame rate" src="docs/media/examples/video-edit.webp" height="300"><br><b>Video edit</b></td>
+    <td align="center"><img alt="A man with a capybara head and a black flat-top, in a brown suit, runs down a beach road, throws a trash bag into a garbage truck and grabs its rail" src="docs/media/examples/motion-capybara.webp" height="300"><br><b>AI Influencer, then Motion</b></td>
   </tr>
   <tr>
     <td align="center"><img alt="A white goose in a red velvet cape on a golden throne, in a candlelit hall where courtiers stand along a red carpet" src="docs/media/examples/video.webp" width="260"><br><b>Video</b></td>
@@ -134,7 +134,7 @@ Every run reaches Comfy through the Comfy SDK, `@comfyorg/sdk` 0.5.0, on one Com
 | The open-weights workflows on your GPU | your own ComfyUI | comfy-api-proxy, set in Settings or by `COMFY_BASE_URL` |
 
 - Each workflow ships as two files: the API file the app sends, and the UI file you open in ComfyUI. The UI file holds its App Mode setup, so it opens in App Mode with the inputs the app shows.
-- An example in Motion's Library runs on the first-and-last-frame graph [`effects-ltx-2-5`](workflows/effects-ltx-2-5/README.md), on LTX 2.5, or on Motion's guide graph with a guide the engine holds.
+- An example in Motion's Library runs on the first-and-last-frame graph [`effects-ltx-2-5`](workflows/effects-ltx-2-5/README.md), on LTX 2.5, on Motion's guide graph with a guide the engine holds, or on Motion's own video chain with a clip the app ships.
 - [docs/stack.md](docs/stack.md) lists every package and each call Rosesfield makes to Comfy.
 
 ## The VFX workflow, built with LTX
@@ -153,7 +153,7 @@ Motion puts the person in your photo in place of the person in your clip, at the
 - The depth video guides the set at full attention and the people at 0.2. The camera move and the person's timing follow your clip, and LTX draws the person from your photo.
 - LTX 2.5 renders in two stages, half size and then a 2x latent upscale, with your edited first frame locked at frame 0. Stage 2 runs at 4 times the frame rate, at most 60 fps, on a latent the LTX 2.5 temporal upscaler made 4 times longer, and the graph keeps every fourth frame, so a face that moves fast keeps its shape.
 - Each step is its own run, with its own price in History, and you can open each graph in ComfyUI.
-- An example in Motion's Library runs the same graph on a depth video built in Blender.
+- Grab and run, an example in Motion's Library, runs the same graph on a depth video built in Blender. Catch the truck opens this whole chain on the clip its result was read from, so any photo of a character or a person works.
 
 Motion's Swap tab runs LTX 2.3 swap, which redraws only the person and keeps the rest of the first 5 seconds of your clip, in one run:
 
@@ -171,6 +171,7 @@ Each example in [Made with Rosesfield](#made-with-rosesfield) is one run in the 
 | Image, then Edit | GPT Image 2.5 Sunburst makes the photo, and Edit turns the water into petals and keeps the rest |
 | Video | LTX 2.5 from a start frame by GPT Image 2.5 Sunburst, 720p, with sound |
 | Motion | Grab and run from Motion's Library, on Motion's guide graph with LTX 2.5, 1080p, with sound |
+| AI Influencer, then Motion | the capybara from AI Influencer's Library, then Catch the truck on Motion's own video chain with LTX 2.5, 1080p, with sound |
 | Shot | LTX 2.5 with a push in, 720p, with sound |
 | Edit | Krea 2 Medium Turbo makes the van, and GPT Image 2.5 Sunburst makes the cake |
 | Relight | Qwen Image Edit 2509 with the Relight LoRA, on a head by Krea 2 Medium Turbo |
@@ -179,7 +180,6 @@ Each example in [Made with Rosesfield](#made-with-rosesfield) is one run in the 
 | Expand | the Qwen Image Inpaint graph, on a field by Seedream 5.0 Pro |
 | Upscale | the SeedVR2 3B graph, from 768 to 1536 pixels |
 | Remove background | the BiRefNet graph |
-| Video edit | the FILM graph, from 24 to 48 frames a second |
 
 AI Influencer's Library holds four templates made in the app: the capybara, the soft-serve man and the frog on Z-Image Turbo, and the mantis on GPT Image 2.5 Sunburst at medium quality.
 

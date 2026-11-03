@@ -31,7 +31,6 @@ describe("Explore's examples", () => {
     const fromClips = showcaseRows.filter(
       (row) => row.from?.endsWith(".mp4") === true
     )
-    expect(fromClips.length).toBeGreaterThan(0)
     for (const row of fromClips) {
       expect(files).not.toContain(`showcase-${row.file}`)
     }

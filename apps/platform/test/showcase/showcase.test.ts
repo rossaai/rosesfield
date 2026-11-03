@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { templates } from "@rosesfield/catalog/ai-influencer"
 import { creditsOfCost } from "@rosesfield/catalog/comfy"
-import { approvedExamples } from "@rosesfield/catalog/motion"
+import { approvedExamples, libraryExamples } from "@rosesfield/catalog/motion"
 import { describe, expect, it } from "vitest"
 import { promptInputOf } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
@@ -100,7 +100,7 @@ describe("the showcase", () => {
     }
   })
 
-  it("bundles every input a pair names, and no file that no row or input names", () => {
+  it("bundles every input a pair names and every Library example's preview, and no file that none of them names", () => {
     const named = new Set([
       ...showcaseRows.flatMap((row) =>
         row.input === undefined ? [row.file] : [row.file, row.input.file]
@@ -108,6 +108,9 @@ describe("the showcase", () => {
       ...exampleRowsOf(approvedExamples).map((row) => row.file),
       ...approvedExamples.flatMap((example) =>
         example.clip === null ? [] : [example.clip.file]
+      ),
+      ...libraryExamples.flatMap((example) =>
+        example.preview === null ? [] : [example.preview.file]
       ),
       ...templateRowsOf(templates).map((row) => row.file),
     ])
