@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { assetQuery, runQuery } from "@/api/queries"
 import { findCatalogApp } from "@/catalog/catalog-apps"
+import type { Draft } from "@/router-context"
 import { type AppForm, useAppForm } from "@/screens/app/use-app-form"
 
 const assetId = "1b2c3d4e-5f60-4718-9a2b-3c4d5e6f7a80"
@@ -201,8 +202,12 @@ describe("Recreate from the Library", () => {
 })
 
 describe("a Recreate draft that arrives while the app is open", () => {
+  function draftOf(prompt: string): Draft {
+    return { prompt, assetIds: [], characterIds: [], inputs: { prompt } }
+  }
+
   function openApp(): {
-    router: ReturnType<typeof createRouter>
+    open: (draft?: Draft) => Promise<void>
     prompts: () => string
   } {
     if (app === null) {
@@ -224,43 +229,27 @@ describe("a Recreate draft that arrives while the app is open", () => {
       </QueryClientProvider>
     )
     return {
-      router,
+      open: (draft) =>
+        router.navigate(
+          draft === undefined ? { to: "/" } : { to: "/", state: { draft } }
+        ),
       prompts: () => String(seen.at(-1)?.values.inputs.prompt ?? ""),
     }
   }
 
-  function draftOf(prompt: string) {
-    return { prompt, assetIds: [], characterIds: [], inputs: { prompt } }
-  }
-
   it("fills the open form with the new draft, as Recreate in How it works does", async () => {
     const opened = openApp()
-    await act(() =>
-      opened.router.navigate({
-        to: "/",
-        state: { draft: draftOf("A goose on a throne") },
-      })
-    )
+    await act(() => opened.open(draftOf("A goose on a throne")))
     await waitFor(() => expect(opened.prompts()).toBe("A goose on a throne"))
-    await act(() =>
-      opened.router.navigate({
-        to: "/",
-        state: { draft: draftOf("A kite over a hill") },
-      })
-    )
+    await act(() => opened.open(draftOf("A kite over a hill")))
     await waitFor(() => expect(opened.prompts()).toBe("A kite over a hill"))
   })
 
   it("control: keeps what you typed while no new draft arrives", async () => {
     const opened = openApp()
-    await act(() =>
-      opened.router.navigate({
-        to: "/",
-        state: { draft: draftOf("A goose on a throne") },
-      })
-    )
+    await act(() => opened.open(draftOf("A goose on a throne")))
     await waitFor(() => expect(opened.prompts()).toBe("A goose on a throne"))
-    await act(() => opened.router.navigate({ to: "/" }))
+    await act(() => opened.open())
     await new Promise((resolve) => setTimeout(resolve, 100))
     expect(opened.prompts()).toBe("A goose on a throne")
   })
