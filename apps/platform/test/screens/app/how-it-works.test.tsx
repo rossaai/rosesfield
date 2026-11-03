@@ -270,7 +270,7 @@ describe("How it works, one composition for every app", () => {
     expect(clip?.muted).toBe(true)
     expect(clip?.loop).toBe(true)
     expect(steps[2]?.querySelector("a")?.getAttribute("href")).toBe(
-      "/apps/motion?example=grab-and-run"
+      "/apps/motion?example=catch-the-truck"
     )
   })
 

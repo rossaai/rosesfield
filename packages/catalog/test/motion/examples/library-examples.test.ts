@@ -23,8 +23,9 @@ function sha256Of(path: string): string {
 }
 
 describe("the Library's examples", () => {
-  it("shows only Grab and run, the one example a maintainer approved, at 1080p in its 2:3 shape", () => {
+  it("shows Catch the truck at 1080p in its 4:7 shape and Grab and run at 1080p in its 2:3 shape, the two examples a maintainer approved", () => {
     expect(approvedExamples.map((example) => example.id)).toEqual([
+      "catch-the-truck",
       "grab-and-run",
     ])
     const grab = exampleOf("grab-and-run")
@@ -50,6 +51,43 @@ describe("the Library's examples", () => {
       model: "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
       credits: 51.66,
     })
+    const truck = exampleOf("catch-the-truck")
+    expect(truck.approval).toEqual({
+      question:
+        "Ship the 4-second Catch the truck final in Motion's Library in 0.2.2, with no remake?",
+      words: "ya no voy a recargar... ya lo que tenemos ya lo subimos así",
+      date: "2026-11-03",
+    })
+    expect(truck.preview).toMatchObject({
+      resolution: "1080p",
+      aspectRatio: "4:7",
+      width: 1152,
+      height: 2048,
+      sha256:
+        "b3fddb64a660901715ee045fabe0d1ebc3c125a07a492673f429b9555730c15e",
+      bytes: 5_881_010,
+    })
+  })
+
+  it("bundles the clip Catch the truck's result was read from with the sha256 and size its record names, apart from its result and its guide", () => {
+    for (const example of approvedExamples) {
+      const clip = example.clip
+      if (clip === null) {
+        continue
+      }
+      const path = `${platform}src/showcase/media/${clip.file}`
+      expect({ id: example.id, sha256: sha256Of(path) }).toEqual({
+        id: example.id,
+        sha256: clip.sha256,
+      })
+      expect(readFileSync(path).byteLength).toBe(clip.bytes)
+      expect(clip.sha256).not.toBe(example.preview?.sha256)
+      expect(clip.sha256).not.toBe(example.guide?.sha256)
+    }
+    expect(exampleOf("catch-the-truck").clip?.sha256).toBe(
+      "596f0cff74f9698062847e60049b9c82d5d4b9d0f0ed9b25ea3301d642d02d12"
+    )
+    expect(exampleOf("grab-and-run").clip).toBeNull()
   })
 
   it("keeps Push into the eye, Flip into a new place and Ticket wipe out until a maintainer approves each result", () => {

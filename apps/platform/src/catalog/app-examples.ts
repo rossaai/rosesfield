@@ -10,6 +10,7 @@ import {
   exampleKeyOf,
   type LibraryExample,
   ltx25GuideModel,
+  ownVideo,
 } from "@rosesfield/catalog/motion"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { findCatalogApp } from "@/catalog/catalog-apps"
@@ -47,23 +48,31 @@ function offeredResolutions(appId: string): readonly string[] {
     : []
 }
 
+const clipInput = "clip"
+
+/** The draft Recreate fills from an example. An example that holds the clip its result was read from opens Motion on your own video, with that clip in the Video well, so the edit of its first frame places any photo you add. */
 export function draftOf(
   example: LibraryExample,
-  offered: readonly string[] = offeredResolutions(motionAppId)
+  offered: readonly string[] = offeredResolutions(motionAppId),
+  media: (file: string) => string | null = mediaOf
 ): Draft {
   const shown = example.preview?.resolution
   const resolution =
     shown !== undefined && offered.includes(shown) ? shown : undefined
+  const clip = example.clip === null ? null : media(example.clip.file)
   return {
     prompt: "",
     assetIds: [],
     characterIds: [],
     inputs: {
-      [exampleInput]: example.id,
-      ...(example.guide === null ? {} : { model: ltx25GuideModel }),
+      [exampleInput]: clip === null ? example.id : ownVideo,
+      ...(example.guide === null && clip === null
+        ? {}
+        : { model: ltx25GuideModel }),
       ...(resolution === undefined ? {} : { resolution }),
     },
     ...(example.preview === null ? {} : { seed: example.preview.seed }),
+    ...(clip === null ? {} : { input: { src: clip, name: clipInput } }),
   }
 }
 
@@ -86,7 +95,7 @@ export function appExamplesOf(
         src,
         kind: "video",
         aspect: { width: preview.width, height: preview.height },
-        draft: draftOf(example),
+        draft: draftOf(example, offeredResolutions(motionAppId), media),
       },
     ]
   })

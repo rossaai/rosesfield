@@ -42,6 +42,8 @@ export const motionCopy = {
   "motion.example.change": "Use your own video",
   "motion.example.buildingsRipple.name": "Buildings ripple",
   "motion.example.buildingsRipple.photo": "A person in front of buildings",
+  "motion.example.catchTheTruck.name": "Catch the truck",
+  "motion.example.catchTheTruck.photo": "A character or a person",
   "motion.example.flipIntoANewPlace.name": "Flip into a new place",
   "motion.example.flipIntoANewPlace.photo":
     "You seated on a tall chair, seen from low down",

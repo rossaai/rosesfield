@@ -1,4 +1,5 @@
 import buildingsRipple from "./recipes/buildings-ripple.json"
+import catchTheTruck from "./recipes/catch-the-truck.json"
 import flipIntoANewPlace from "./recipes/flip-into-a-new-place.json"
 import freezeAndCircle from "./recipes/freeze-and-circle.json"
 import grabAndRun from "./recipes/grab-and-run.json"
@@ -14,6 +15,7 @@ import runs from "./runs.json"
 
 export const exampleRecords: Readonly<Record<string, unknown>> = {
   "buildings-ripple": buildingsRipple,
+  "catch-the-truck": catchTheTruck,
   "flip-into-a-new-place": flipIntoANewPlace,
   "freeze-and-circle": freezeAndCircle,
   "grab-and-run": grabAndRun,
