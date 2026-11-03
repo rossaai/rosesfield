@@ -3,6 +3,7 @@ import { selectBinding } from "@rosesfield/generation/bindings"
 import { effectGraph, hasEditPass } from "#effects/comfy/effect-graph"
 import { deliveryFrames, ltxFrames, sizeMap } from "#effects/comfy/frame-sizes"
 import { effectsWorkflow } from "#effects/comfy/graph-edit"
+import { withPhotoFitToGuide } from "#motion/comfy/guide-fit"
 import {
   ltx25GuideInputs,
   ltx25GuideWorkflow,
@@ -148,9 +149,10 @@ export const sentenceInput = "scene"
 
 type Held = { matte: boolean; endKey: boolean }
 
+/** The guided example's graph: your photo fitted to the guide's frame, the guide's matte when it has one, and the end key when the run has one. */
 function heldGraph(held: Held) {
   return (workflow: Record<string, unknown>): Record<string, unknown> => {
-    const graph = apiGraph.parse(workflow)
+    const graph = withPhotoFitToGuide(apiGraph.parse(workflow))
     const masked = held.matte ? graph : withoutMask(graph)
     return held.endKey ? withoutLastFrame(masked) : withoutEndKey(masked)
   }

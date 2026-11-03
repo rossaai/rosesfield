@@ -154,19 +154,17 @@ describe("the motion app through the gateway on the demo engine", () => {
     expect(done.outputs).toHaveLength(1)
   })
 
-  it("runs a photo and a depth guide on the guide graph and keeps the model on the run", async () => {
+  it("runs your clip and photo on the swap graph with who to swap, and refuses a resolution the swap does not read and the depth guide, which Motion no longer lists", async () => {
     const gateway = openGateway()
     const photo = await upload(gateway, "image/png", pngBytes)
-    const guide = await upload(gateway, "video/mp4", mp4Bytes)
-    const response = await start(gateway, {
-      inputs: {
-        photo: [photo],
-        clip: [guide],
-        model: "ltx-2-3-guide",
-        resolution: "480p",
-      },
-      aspectRatio: "9:16",
-    })
+    const clip = await upload(gateway, "video/mp4", mp4Bytes)
+    const swap = {
+      photo: [photo],
+      clip: [clip],
+      model: "ltx-2-3-swap",
+      target: "the man in the red coat",
+    }
+    const response = await start(gateway, { inputs: swap })
     expect(response.status).toBe(202)
     const { run } = runResponse.parse(await response.json())
     await gateway.drive(run.id)
@@ -175,12 +173,15 @@ describe("the motion app through the gateway on the demo engine", () => {
     )
     const done = runResponse.parse(await read.json()).run
     expect(done.status).toBe("done")
-    expect(done.inputs).toMatchObject({
-      clip: [guide],
-      model: "ltx-2-3-guide",
-      resolution: "480p",
-    })
-    expect(done.outputs).toHaveLength(1)
+    expect(done.inputs).toMatchObject(swap)
+    expect(done.inputs).not.toHaveProperty("resolution")
+    for (const inputs of [
+      { ...swap, resolution: "480p" },
+      { ...swap, model: "ltx-2-3-guide" },
+    ]) {
+      const refused = await start(gateway, { inputs })
+      expect(refused.status).toBe(400)
+    }
   })
 
   it("refuses a run without a clip, at 1080p on LTX 2.3 control, with two outputs, or your own video on LTX 2.5 in one run, before it starts", async () => {

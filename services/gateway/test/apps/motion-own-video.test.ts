@@ -342,18 +342,16 @@ describe("your own video through the gateway on the demo engine", () => {
     expect(started).toBe(0)
   })
 
-  it("refuses a video over 10 or under 2 seconds before any step starts, in the words the screen uses, and lets 4 seconds through, the control", async () => {
+  it("runs a video over 10 seconds on its first 10 seconds and refuses one under 2 seconds before any step starts, in the words the screen uses", async () => {
     const framesOf = serverFrames.framesOf
-    const long = await refusalOf({ secondsOf: async () => 12, framesOf })
-    expect(long.error).toMatchObject({
-      code: "MOTION_CLIP_LENGTH",
-      message: "This clip runs 12 seconds. Pick one of 10 seconds or less.",
-    })
-    expect(long.started).toBe(0)
+    const long = await refusalOf({ secondsOf: async () => 38, framesOf })
+    expect(long.error).toMatchObject({ run: { status: "done" } })
     const short = await refusalOf({ secondsOf: async () => 1.5, framesOf })
     expect(short.error).toMatchObject({
+      code: "MOTION_CLIP_LENGTH",
       message: "This clip runs 1.5 seconds. Pick one of 2 seconds or more.",
     })
+    expect(short.started).toBe(0)
     const fit = await refusalOf(serverFrames)
     expect(fit.error).toMatchObject({ run: { status: "done" } })
   })

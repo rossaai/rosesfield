@@ -3,7 +3,7 @@ import { type AppListing, appListing } from "@rosesfield/contract"
 
 export const graphId = "ltx-2-3-control"
 
-export const guideId = "ltx-2-3-guide"
+export const swapGraphId = "ltx-2-3-swap"
 
 export function motionListing(): AppListing {
   return appListing.parse({
@@ -31,9 +31,19 @@ export function motionListing(): AppListing {
         labelKey: "motion.input.model.label",
         options: [
           { value: graphId, labelKey: "motion.model.ltx23" },
-          { value: guideId, labelKey: "motion.model.ltx23Guide" },
+          { value: swapGraphId, labelKey: "motion.model.ltx23" },
         ],
         default: graphId,
+      },
+      {
+        type: "choice",
+        name: "example",
+        labelKey: "motion.input.clip.label",
+        options: [
+          { value: "own", labelKey: "motion.example.own" },
+          { value: "grab-and-run", labelKey: "motion.example.grabAndRun.name" },
+        ],
+        default: "own",
       },
       {
         type: "toggle",
@@ -88,7 +98,12 @@ function model(
 
 export const graph = model(graphId, "comfy-cloud", "motion-transfer", null)
 
-export const guide = model(guideId, "comfy-cloud", "motion-transfer", null)
+export const swapGraph = model(
+  swapGraphId,
+  "comfy-cloud",
+  "character-swap",
+  null
+)
 
 export const mover = model("lab/move-v1", "Lab", "motion-transfer", [
   media("referenceVideo", "video"),
@@ -118,4 +133,9 @@ export const swapper = model("lab/swap-v1", "Lab", "character-swap", [
   media("image", "image"),
 ])
 
-export const catalog: readonly CatalogModel[] = [graph, guide, mover, swapper]
+export const catalog: readonly CatalogModel[] = [
+  graph,
+  swapGraph,
+  mover,
+  swapper,
+]

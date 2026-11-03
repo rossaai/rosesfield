@@ -10,6 +10,7 @@ import {
 } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { MediaTile } from "@rosesfield/ui/components/media-tile"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import {
   type ReactElement,
   type ReactNode,
@@ -33,10 +34,41 @@ import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import { appSettingsPlan, isSettingInput } from "@/screens/app/settings-plan"
 import { mediaOf } from "@/showcase/showcase"
 import { clipLimits, photoLimits } from "@/studio/motion/motion-checks"
-import { modeInput, soundInput } from "@/studio/motion/motion-tabs"
+import {
+  isMotionTab,
+  modeInput,
+  motionTabs,
+  tabKeys,
+} from "@/studio/motion/motion-tabs"
 import type { MotionState } from "@/studio/motion/use-motion-screen"
 
 type WellKind = "image" | "video"
+
+/** Motion's one row of tabs: Move and Swap. */
+export function MotionTabs({
+  state,
+}: {
+  state: Pick<MotionState, "tab" | "setTab">
+}): ReactElement {
+  return (
+    <Tabs
+      value={state.tab}
+      onValueChange={(next) => {
+        if (isMotionTab(next)) {
+          state.setTab(next)
+        }
+      }}
+    >
+      <TabsList aria-label={tCatalog("motion.tabs.label")}>
+        {motionTabs.map((one) => (
+          <TabsTrigger key={one} value={one}>
+            {tCatalog(tabKeys[one])}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
+  )
+}
 
 function captionOf(app: AppListing, kind: WellKind): string {
   const input = app.inputs.find(
@@ -45,11 +77,15 @@ function captionOf(app: AppListing, kind: WellKind): string {
   return input === undefined ? t(`kind.${kind}`) : inputCaption(input)
 }
 
+/** The clip well's limits: the formats and the size, and the seconds only for a model that refuses a longer clip, since Motion trims one for its own graphs. */
 export function clipLimitsOf(state: Pick<MotionState, "range">): string {
+  const { range } = state
   return assetLimitsText({
     formats: clipLimits.mimes,
     bytes: clipLimits.maxBytes,
-    ...(state.range === null ? {} : { seconds: state.range }),
+    ...(range === null || range.trims
+      ? {}
+      : { seconds: { min: range.min, max: range.max } }),
   })
 }
 
@@ -119,13 +155,6 @@ function CharacterButton({ state }: { state: MotionState }): ReactElement {
 }
 
 function ClipWell({ state }: { state: MotionState }): ReactElement {
-  const guide =
-    state.mode === "guide"
-      ? {
-          caption: tCatalog("motion.input.guide.label"),
-          note: tCatalog("motion.input.guide.note"),
-        }
-      : {}
   return (
     <Well
       state={state}
@@ -133,7 +162,7 @@ function ClipWell({ state }: { state: MotionState }): ReactElement {
       name={state.names.clip}
       limits={clipLimitsOf(state)}
       message={state.clipMessage}
-      {...guide}
+      note={state.clipNote}
     />
   )
 }
@@ -153,7 +182,7 @@ function ExampleWell({
     <FieldFrame
       caption={tCatalog("motion.input.clip.label")}
       isOptional={false}
-      note={tCatalog(`motion.example.${key}.photo`)}
+      note={null}
       problem={undefined}
       message={null}
     >
@@ -178,12 +207,11 @@ function ExampleWell({
   )
 }
 
-/** Your own video takes 1 to 15 photos of people, products or clothes, and every other path takes one. */
+/** Your own video takes up to 15 photos, and every other path takes one. The well says so only when you cross it. */
 function photosOf(state: MotionState): Partial<WellProps> {
   return state.isOwnChain
     ? {
         caption: tCatalog("motion.input.photos.label"),
-        note: tCatalog("motion.input.photos.note"),
         max: clipPlanLimits.mostPhotos,
       }
     : {}
@@ -257,12 +285,7 @@ function RestFields({
         app={state.app}
         form={form}
         lastSeed={state.lastSeed}
-        plan={appSettingsPlan(
-          applied,
-          state.mode === "guide"
-            ? [modeInput, exampleInput, soundInput]
-            : [modeInput, exampleInput]
-        )}
+        plan={appSettingsPlan(applied, [modeInput, exampleInput])}
       />
     </>
   )

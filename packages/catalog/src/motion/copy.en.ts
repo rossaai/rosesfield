@@ -30,30 +30,25 @@ export const motionCopy = {
   "motion.choice.resolution.p480": "480p",
   "motion.choice.resolution.p720": "720p",
   "motion.tabs.label": "Mode",
-  "motion.tab.move": "Move a photo",
-  "motion.tab.swap": "Swap a character",
+  "motion.tab.move": "Move",
+  "motion.tab.swap": "Swap",
   "motion.input.clip.range":
     "{model} takes videos of {min} to {max} seconds. This one runs {seconds} seconds.",
+  "motion.input.clip.trimmed":
+    "Motion takes the first {max} seconds of your {seconds}-second video.",
   "motion.input.model.label": "Model",
-  "motion.model.ltx23": "LTX 2.3 control",
-  "motion.model.ltx23Guide": "LTX 2.3 depth guide",
-  "motion.input.guide.label": "Guide video",
-  "motion.input.guide.note":
-    "A depth video that sets the camera and the movement, such as a Blender render. Its first frame matches your photo.",
-  "motion.price.fromControl":
-    "Generate, {amount} Comfy credits, estimated from your runs of LTX 2.3 control",
+  "motion.model.ltx23": "LTX 2.3",
   "motion.example.own": "Your video",
   "motion.example.change": "Use your own video",
   "motion.example.buildingsRipple.name": "Buildings ripple",
   "motion.example.buildingsRipple.photo": "A person in front of buildings",
   "motion.example.flipIntoANewPlace.name": "Flip into a new place",
   "motion.example.flipIntoANewPlace.photo":
-    "You seated on a tall chair, seen from low down, phone upright",
+    "You seated on a tall chair, seen from low down",
   "motion.example.freezeAndCircle.name": "Freeze and circle",
   "motion.example.freezeAndCircle.photo": "A person in motion",
   "motion.example.grabAndRun.name": "Grab and run",
-  "motion.example.grabAndRun.photo":
-    "You, head to knees, facing the camera, phone upright",
+  "motion.example.grabAndRun.photo": "You, head to knees, facing the camera",
   "motion.example.growGiant.name": "Grow into a giant",
   "motion.example.growGiant.photo": "A person on a street",
   "motion.example.manyCopies.name": "Fill with copies",
@@ -69,13 +64,10 @@ export const motionCopy = {
   "motion.example.stillInTheStreet.name": "Still in a busy street",
   "motion.example.stillInTheStreet.photo": "A person on a busy street",
   "motion.example.ticketWipe.name": "Ticket wipe",
-  "motion.example.ticketWipe.photo":
-    "You whole, side on, mid-step, phone sideways",
+  "motion.example.ticketWipe.photo": "You whole, side on, mid-step",
   "motion.agent.howTo":
     "Runs an example from the Library on a photo in one call. Before the call, read the photo and hold it against the example's need below. Ask one question only when it fails the need. Run at 480p first and show the draft with the price of the final. Run 720p or 1080p only after the person says yes.",
   "motion.agent.need": "{example}: {need}",
-  "motion.input.photo.tall": "a tall photo, taken with the phone upright",
-  "motion.input.photo.wide": "a wide photo, taken with the phone sideways",
   "motion.choice.resolution.p1080": "1080p",
   "motion.chain.makeFinal": "Make final",
   "motion.chain.renderFinal": "Render the final at {resolution}",
@@ -84,8 +76,6 @@ export const motionCopy = {
     "{amount} Comfy credits, measured on a {seconds}-second {resolution} run",
   "motion.model.ltx25": "LTX 2.5",
   "motion.input.photos.label": "Photos",
-  "motion.input.photos.note":
-    "1 to 15 photos of people, products or clothes your video should show.",
   "motion.input.change.label": "Prompt",
   "motion.input.change.placeholder":
     "Replace the man on the left, not the woman",
@@ -99,4 +89,6 @@ export const motionCopy = {
     "Changes your own video in one call: the video in inputs.clip, 1 to 15 photos of people, products or clothes in inputs.photo, and an optional sentence in inputs.scene. The call makes a 480p draft and answers with it, the credits of the final and the photos that matched nothing. Show the person the draft and that price. Only after they say yes, make the final with a second call that names the draft run id in inputs.draft, with the same photos and the resolution they chose.",
   "motion.chain.price.unread":
     "{amount} Comfy credits, measured on a {seconds}-second {resolution} run, plus reading your video, which no run has measured yet",
+  "motion.input.target.label": "What to swap",
+  "motion.input.target.placeholder": "The person",
 } as const

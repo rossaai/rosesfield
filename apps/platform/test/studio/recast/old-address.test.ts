@@ -3,7 +3,7 @@ import { tabOfHash } from "@/studio/motion/motion-tabs"
 import { motionAddressOf, oldAddressOf } from "@/studio/recast/old-address"
 
 describe("the old Recast address", () => {
-  it("opens Motion on Swap a character", () => {
+  it("opens Motion on Swap", () => {
     const address = motionAddressOf({ use: undefined })
     expect(address).toEqual({
       to: "/apps/$appId",
@@ -20,7 +20,7 @@ describe("the old Recast address", () => {
     })
   })
 
-  it("sends the Recast address to Motion on Swap a character with your file", () => {
+  it("sends the Recast address to Motion on Swap with your file", () => {
     expect(oldAddressOf("recast", { use: "clip-5s" })).toEqual({
       to: "/apps/$appId",
       params: { appId: "motion" },

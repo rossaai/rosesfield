@@ -11,13 +11,14 @@ import {
 import { mediaOf } from "@/showcase/showcase"
 
 describe("the examples an app's Library shows", () => {
-  it("shows Motion's approved example by its name, its need and its result, never its guide", () => {
+  it("shows Motion's approved example by its name and its result, with no hint about your photo and never its guide", () => {
     const [grab, ...more] = examplesOf("motion")
     expect(more).toEqual([])
     expect(grab).toMatchObject({
       id: "grab-and-run",
       name: "Grab and run",
       aspect: { width: 1152, height: 1792 },
+      line: null,
     })
     expect(grab?.src).toBe(mediaOf("grab-and-run.mp4"))
     expect(grab?.src).not.toMatch(/guides/)

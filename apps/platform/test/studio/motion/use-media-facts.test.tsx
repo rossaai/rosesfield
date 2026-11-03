@@ -112,7 +112,8 @@ describe("the motion media reading", () => {
       },
     })
     const reading = result.current
-    const problem = reading.state === "read" ? clipProblem(reading.facts) : null
+    const problem =
+      reading.state === "read" ? clipProblem(reading.facts, null) : null
     expect(problem === null ? null : t(problem.key, problem.values)).toBe(
       "This input takes an MP4, MOV or WebM video this browser can open. Pick another file."
     )

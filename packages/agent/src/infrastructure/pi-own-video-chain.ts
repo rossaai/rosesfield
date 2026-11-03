@@ -10,7 +10,7 @@ import {
   exampleInput,
   finalAt,
   finalPartsOf,
-  isClipLengthFit,
+  isClipLongEnough,
   ltx25GuideModel,
   motionAppId,
   motionEndKeySteps,
@@ -143,7 +143,7 @@ function clipOf(request: RunRequest): AssetId {
   return clip
 }
 
-/** Refuses your own video before any step starts: on a host that cannot read a video, and for a video under 2 or over 10 seconds. */
+/** Refuses your own video before any step starts: on a host that cannot read a video, and for a video under 2 seconds. A longer video than Motion keeps runs on its first stretch. */
 export async function checkOwnVideo(
   handlers: OwnVideoHandlers,
   request: RunRequest
@@ -153,7 +153,7 @@ export async function checkOwnVideo(
     throw new OwnVideoInAppError()
   }
   const seconds = await clips.secondsOf(clipOf(request))
-  if (!isClipLengthFit(seconds)) {
+  if (!isClipLongEnough(seconds)) {
     throw new ClipLengthRefusedError({ seconds })
   }
 }

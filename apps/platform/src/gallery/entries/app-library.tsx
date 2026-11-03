@@ -17,7 +17,7 @@ function exampleOf(id: string): AppExample {
   return {
     id,
     name: tCatalog(`motion.example.${key}.name`),
-    line: tCatalog(`motion.example.${key}.photo`),
+    line: null,
     src: demoVideo,
     kind: "video",
     aspect: { width: 16, height: 9 },

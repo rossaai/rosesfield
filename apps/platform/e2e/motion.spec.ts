@@ -21,13 +21,19 @@ test.beforeEach(async ({ page }) => {
 test.describe("Motion's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("holds one mode with no tab row: a Clip well and a Photo well with their limits, Pick a character, the model row and Generate", async ({
+  test("holds one row of tabs, Move and Swap, then a Clip well and a Photo well with their limits, Pick a character, the model row and Generate", async ({
     page,
   }) => {
     await page.goto("/apps/motion")
     const column = page.locator('[data-slot="composer"]')
     await expect(column).toBeVisible()
-    await expect(column.getByRole("tablist")).toHaveCount(0)
+    const tabs = column.getByRole("tablist", { name: "Mode" })
+    await expect(tabs).toHaveCount(1)
+    await expect(tabs.getByRole("tab")).toHaveText(["Move", "Swap"])
+    await expect(tabs.getByRole("tab", { name: "Move" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    )
     const wells = column.locator('[data-slot="drop-well"]')
     await expect(wells).toHaveCount(2)
     await expectTip(page, wells.nth(0), /MP4, MOV,? or WebM/)
@@ -40,45 +46,46 @@ test.describe("Motion's column", () => {
     ).toBeVisible()
     await expect(column.locator('[data-slot="generate-button"]')).toBeVisible()
   })
-
-  test("opens on the same column from the old Recast address", async ({
-    page,
-  }) => {
-    await page.goto("/apps/recast")
-    await expect(page).toHaveURL(/\/apps\/motion#swap$/)
-    const column = page.locator('[data-slot="composer"]')
-    await expect(column.getByRole("tablist")).toHaveCount(0)
-    await expect(
-      column.getByRole("button", { name: "Pick a character" })
-    ).toBeVisible()
-  })
 })
 
-test.describe("Follow a guide", () => {
+test.describe("Motion's tabs", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("is the LTX 2.3 depth guide row of the one model list: picking it names the video well Guide video with its note, and picking the control graph names it Clip again", async ({
+  test("list models and never a technique: LTX 2.5 and LTX 2.3 on Move, and the swap's model on Swap", async ({
     page,
   }) => {
     await page.goto("/apps/motion")
     const column = page.locator('[data-slot="composer"]')
-    await expect(column.getByRole("tablist")).toHaveCount(0)
     await openImagePicker(page)
-    await page
-      .getByRole("listbox")
-      .locator("[data-slot='model-row']", { hasText: "LTX 2.3 depth guide" })
-      .click()
-    await expect(column.getByText("Guide video")).toBeVisible()
+    const rows = page.getByRole("listbox").locator("[data-slot='model-row']")
+    await expect(rows.filter({ hasText: "LTX 2.5" })).toHaveCount(1)
+    await expect(rows.filter({ hasText: "LTX 2.3" })).toHaveCount(1)
+    await expect(rows.filter({ hasText: /depth guide|control/i })).toHaveCount(
+      0
+    )
+    await page.keyboard.press("Escape")
+    await column.getByRole("tab", { name: "Swap" }).click()
+    await expect(column.getByRole("tab", { name: "Swap" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    )
+    await expect(column.getByText("What to swap")).toBeVisible()
+    await openImagePicker(page)
+    await expect(rows.filter({ hasText: "LTX 2.3" })).toHaveCount(1)
+    await expect(rows.filter({ hasText: "LTX 2.5" })).toHaveCount(0)
+  })
+
+  test("open on Swap from the old Recast address", async ({ page }) => {
+    await page.goto("/apps/recast")
+    await expect(page).toHaveURL(/\/apps\/motion#swap$/)
+    const column = page.locator('[data-slot="composer"]')
+    await expect(column.getByRole("tab", { name: "Swap" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    )
     await expect(
-      column.getByText(/A depth video that sets the camera/)
+      column.getByRole("button", { name: "Pick a character" })
     ).toBeVisible()
-    await expect(column.locator('[data-slot="drop-well"]')).toHaveCount(2)
-    await openImagePicker(page)
-    await page
-      .getByRole("listbox")
-      .locator("[data-slot='model-row']", { hasText: "LTX 2.3 control" })
-      .click()
-    await expect(column.getByText("Guide video")).toHaveCount(0)
   })
 })
 
@@ -99,7 +106,7 @@ test.describe("Motion on a phone", () => {
     await page.locator('[data-slot="app-bar-tabGenerate"]').click()
     const sheet = page.getByRole("dialog")
     await expect(sheet).toBeVisible()
-    await expect(sheet.getByRole("tablist")).toHaveCount(0)
+    await expect(sheet.getByRole("tablist", { name: "Mode" })).toHaveCount(1)
     await expect(sheet.locator('[data-slot="drop-well"]')).toHaveCount(2)
     const generate = await boxOf(sheet.locator('[data-slot="generate-button"]'))
     const sheetBox = await boxOf(sheet)

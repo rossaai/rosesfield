@@ -82,7 +82,7 @@ export function appExamplesOf(
       {
         id: example.id,
         name: tCatalog(`motion.example.${key}.name`),
-        line: tCatalog(`motion.example.${key}.photo`),
+        line: null,
         src,
         kind: "video",
         aspect: { width: preview.width, height: preview.height },

@@ -3,12 +3,7 @@ import { ratioOfSize } from "@/catalog/app-facts"
 import type { FieldProblem } from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
 import type { AppForm } from "@/screens/app/use-app-form"
-import {
-  clipProblem,
-  examplePhotoProblem,
-  guideShapeProblem,
-  photoProblem,
-} from "@/studio/motion/motion-checks"
+import { clipProblem, photoProblem } from "@/studio/motion/motion-checks"
 import type { ClipRange, WellNames } from "@/studio/motion/motion-tabs"
 import {
   type MediaReading,
@@ -21,9 +16,8 @@ export type MotionChecks = {
   photo: FieldProblem | null
   readingInput: string | null
   clipSize: { width: number; height: number } | null
+  clipSeconds: number | null
 }
-
-const resolutionInput = "resolution"
 
 function missingProblem(name: string): FieldProblem {
   return { name, key: "field.asset.required", values: {} }
@@ -45,39 +39,9 @@ export function clipCheckOf(
   }
 }
 
-export type GuideCheck = { photo: MediaReading; resolution: string }
-
-export function guideCheckOf(
-  reading: MediaReading,
-  guide: GuideCheck,
-  range: ClipRange | null,
-  name: string
-): FieldProblem | null {
-  const problem = clipCheckOf(reading, range, name)
-  if (
-    problem !== null ||
-    reading.state !== "read" ||
-    guide.photo.state !== "read"
-  ) {
-    return problem
-  }
-  return guideShapeProblem(
-    reading.facts,
-    guide.photo.facts,
-    guide.resolution,
-    name
-  )
-}
-
-export type ExampleShape = {
-  guide: { width: number; height: number }
-  resolution: string
-}
-
 export function photoCheckOf(
   reading: MediaReading,
-  name: string,
-  shape: ExampleShape | null = null
+  name: string
 ): FieldProblem | null {
   switch (reading.state) {
     case "none":
@@ -86,17 +50,7 @@ export function photoCheckOf(
     case "failed":
       return missingProblem(name)
     case "read":
-      return (
-        photoProblem(reading.facts, name) ??
-        (shape === null
-          ? null
-          : examplePhotoProblem(
-              shape.guide,
-              reading.facts,
-              shape.resolution,
-              name
-            ))
-      )
+      return photoProblem(reading.facts, name)
   }
 }
 
@@ -136,6 +90,10 @@ function clipSizeOf(reading: MediaReading): MotionChecks["clipSize"] {
   return width === null || height === null ? null : { width, height }
 }
 
+function clipSecondsOf(reading: MediaReading): number | null {
+  return reading.state === "read" ? reading.facts.seconds : null
+}
+
 /** The problem of the photos after the first, naming the photo by its place in the well: one this browser cannot open or that is not a photo of a kind it takes. A file over the limit says so as the field does. */
 export function laterPhotoProblem(
   readings: readonly MediaReading[],
@@ -157,8 +115,6 @@ export function useMotionChecks(
   form: AppForm,
   names: WellNames,
   range: ClipRange | null,
-  isGuide = false,
-  exampleGuide: ExampleShape["guide"] | null = null,
   exampleShape: string | null = null
 ): MotionChecks {
   const photoIds = listOf(form.values.inputs[names.photo])
@@ -173,29 +129,13 @@ export function useMotionChecks(
       : clip.state === "reading"
         ? names.clip
         : null
-  const resolution = form.values.inputs[resolutionInput]
-  const resolutionText = typeof resolution === "string" ? resolution : ""
   return {
-    clip: isGuide
-      ? guideCheckOf(
-          clip,
-          {
-            photo,
-            resolution: resolutionText,
-          },
-          range,
-          names.clip
-        )
-      : clipCheckOf(clip, range, names.clip),
+    clip: clipCheckOf(clip, range, names.clip),
     photo:
-      photoCheckOf(
-        photo,
-        names.photo,
-        exampleGuide === null
-          ? null
-          : { guide: exampleGuide, resolution: resolutionText }
-      ) ?? laterPhotoProblem(photos, names.photo),
+      photoCheckOf(photo, names.photo) ??
+      laterPhotoProblem(photos, names.photo),
     readingInput,
     clipSize: clipSizeOf(clip),
+    clipSeconds: clipSecondsOf(clip),
   }
 }

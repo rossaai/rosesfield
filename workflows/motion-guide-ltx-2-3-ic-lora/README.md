@@ -5,7 +5,7 @@ Renders the person in your photo moving along your guide video, on LTX 2.3 22B d
 | | |
 |---|---|
 | Workflow id | `motion-guide-ltx-2-3-ic-lora` |
-| Run by | [`motion`](../../packages/catalog/src/motion/), in Follow a guide |
+| Run by | no app. Motion's picker lists models and never a technique, so Motion runs LTX 2.3 on the pose control of [`motion-ltx-2-3-ic-lora`](../motion-ltx-2-3-ic-lora/README.md), and this graph is the one [`motion-guide-ltx-2-5`](../motion-guide-ltx-2-5/README.md) was moved from |
 | Core model | LTX 2.3 22B distilled, with the LTX 2.3 union control IC-LoRA |
 | Custom node packs | none, every node is a ComfyUI core node |
 

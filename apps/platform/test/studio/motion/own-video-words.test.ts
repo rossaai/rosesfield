@@ -48,7 +48,8 @@ describe("your own video's refusals", () => {
   const modelNames = /LTX|Qwen|GPT|GLM|depth|mask|matte|plan|node/i
 
   it("say what is wrong with your video in plain words and name no model", () => {
-    const words = clipMessageOf(tooLong, { min: 2, max: 10 }, null) ?? ""
+    const words =
+      clipMessageOf(tooLong, { min: 2, max: 10, trims: false }, null) ?? ""
     expect(words).toBe(
       "This clip runs 12 seconds. Pick one of 10 seconds or less."
     )
@@ -57,8 +58,8 @@ describe("your own video's refusals", () => {
 
   it("name the model you picked when you picked one, the control", () => {
     expect(
-      clipMessageOf(tooLong, { min: 2, max: 10 }, "LTX 2.3 control")
-    ).toMatch(/LTX 2.3 control/)
+      clipMessageOf(tooLong, { min: 2, max: 10, trims: false }, "Lab Move")
+    ).toMatch(/Lab Move/)
   })
 
   it("say in one plain sentence that nothing in your video matches your photos, and that your inputs are kept", () => {

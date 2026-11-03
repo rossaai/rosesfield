@@ -18,7 +18,6 @@ import {
 } from "#motion/examples/library-examples"
 import {
   graphModel,
-  guideModel,
   ltx25GuideModel,
   motionTasks,
   planModel,
@@ -29,11 +28,11 @@ import {
 /** The label of an input or option a run chain fills. No surface shows it, so it names the app. */
 const chainLabel = "motion.name"
 
-const renderModels = [graphModel, guideModel, ltx25GuideModel]
+const renderModels = [graphModel, ltx25GuideModel]
 
 const photoModels = [...renderModels, swapModel, planModel]
 
-const twoPassModels = [graphModel, guideModel]
+const twoPassModels = [graphModel]
 
 type AppInputs = AppInput["inputs"]
 
@@ -75,8 +74,7 @@ function modelChoice(): AppInputs {
       options: [
         { value: ltx25GuideModel, labelKey: "motion.model.ltx25" },
         { value: graphModel, labelKey: "motion.model.ltx23" },
-        { value: guideModel, labelKey: "motion.model.ltx23Guide" },
-        { value: swapModel, labelKey: "motion.tab.swap" },
+        { value: swapModel, labelKey: "motion.model.ltx23" },
         { value: readClipModel, labelKey: chainLabel, fill: "chain" },
         { value: planModel, labelKey: chainLabel, fill: "chain" },
       ],
@@ -175,7 +173,7 @@ function swapTargetInput(): AppInputs {
     {
       type: "prompt",
       name: swapInputs.target,
-      labelKey: "motion.tab.swap",
+      labelKey: "motion.input.target.label",
       presence: "optional",
       maxLength: 200,
       when: [{ input: "model", is: [swapModel] }],
@@ -240,6 +238,7 @@ function motionInputs(offered: readonly LibraryExample[]): AppInputs {
         { value: "1080p", labelKey: "motion.choice.resolution.p1080" },
       ],
       default: "720p",
+      when: [{ input: "model", is: renderModels }],
       bounds: [
         {
           when: [{ input: "model", is: twoPassModels }],

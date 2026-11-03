@@ -4701,21 +4701,6 @@
         }
       }
     },
-    "graph/ltx-2-3-guide": {
-      "lab": "Lightricks",
-      "release": "2026-03-04",
-      "weights": null,
-      "ranks": {},
-      "thirds": {},
-      "line": {
-        "none": "No page read describes this graph's model"
-      },
-      "releaseSource": {
-        "url": "https://huggingface.co/Lightricks/LTX-2.3",
-        "kind": "Hugging Face repository createdAt"
-      },
-      "tasks": {}
-    },
     "graph/ltx-2-3-outpaint": {
       "lab": "Lightricks",
       "release": "2026-03-04",
@@ -4735,6 +4720,34 @@
           "licensedScore": null,
           "rank": 22,
           "of": 32,
+          "placement": "release",
+          "sources": [],
+          "tiers": [],
+          "price": {
+            "none": "a graph runs on Comfy Cloud GPU time, which the rate card does not price"
+          }
+        }
+      }
+    },
+    "graph/ltx-2-3-swap": {
+      "lab": "Lightricks",
+      "release": "2026-03-04",
+      "weights": null,
+      "ranks": {},
+      "thirds": {},
+      "line": {
+        "none": "No page read describes this graph's model"
+      },
+      "releaseSource": {
+        "url": "https://huggingface.co/Lightricks/LTX-2.3",
+        "kind": "Hugging Face repository createdAt"
+      },
+      "tasks": {
+        "character-swap": {
+          "score": null,
+          "licensedScore": null,
+          "rank": 1,
+          "of": 1,
           "placement": "release",
           "sources": [],
           "tiers": [],
