@@ -14,6 +14,8 @@ import { KindFlow, MadeDiscs, TakenDiscs } from "@/pieces/kind-discs"
 import { LabMark } from "@/pieces/lab-mark"
 import { runLabOf, runModel } from "@/pieces/run/run-facts"
 import { inputRowsOf } from "@/pieces/run/run-inputs"
+import { chosenLabOf, modelNameOf } from "@/screens/app/hosted/catalog-picker"
+import { useOpeningModel } from "@/screens/app/hosted/use-hosted-model"
 import { mediaOf } from "@/showcase/showcase"
 
 const cardFrame: MediaAspect = { width: 4, height: 5 }
@@ -162,13 +164,30 @@ export function RunSettings({
   )
 }
 
-export function DefaultSettings({ app }: { app: AppListing }): ReactElement {
+function listedModelOf(
+  app: AppListing
+): { name: string; lab: string | null } | null {
   const input = app.inputs.find((one) => one.name === modelInputName)
   const option =
     input?.type === "choice"
       ? input.options.find((one) => one.value === input.default)
       : undefined
-  return option === undefined ? (
+  return option === undefined
+    ? null
+    : {
+        name: tCatalog(option.labelKey),
+        lab: labOfModel(`graph/${option.value}`) ?? labOfModel(option.value),
+      }
+}
+
+export function DefaultSettings({ app }: { app: AppListing }): ReactElement {
+  const opening = useOpeningModel(app)
+  const shown = opening.isTaskApp
+    ? opening.model === null
+      ? null
+      : { name: modelNameOf(opening.model), lab: chosenLabOf(opening.model) }
+    : listedModelOf(app)
+  return shown === null ? (
     <div
       data-slot="how-settings"
       className="flex size-full items-center justify-center gap-s2 text-ink-muted"
@@ -176,11 +195,7 @@ export function DefaultSettings({ app }: { app: AppListing }): ReactElement {
       <KindFlow app={app} />
     </div>
   ) : (
-    <ModelCard
-      model={tCatalog(option.labelKey)}
-      lab={labOfModel(`graph/${option.value}`) ?? labOfModel(option.value)}
-      rows={[]}
-    />
+    <ModelCard model={shown.name} lab={shown.lab} rows={[]} />
   )
 }
 
