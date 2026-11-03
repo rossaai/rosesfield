@@ -1,6 +1,12 @@
 import { findApp } from "@rosesfield/catalog"
 import { type AppListing, appListing } from "@rosesfield/contract"
-import { cleanup, render, screen } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react"
 import type { ReactElement } from "react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { appName } from "@/catalog/app-facts"
@@ -18,6 +24,7 @@ import {
 } from "./frame-render"
 
 const ads = appListing.parse(findApp("ads"))
+const motion = appListing.parse(findApp("motion"))
 
 beforeEach(stubFetch)
 
@@ -45,10 +52,10 @@ function barFrame(app: AppListing): ReactElement {
   )
 }
 
-function columnFrame(hasHeader?: boolean): ReactElement {
+function columnFrame(hasHeader?: boolean, app = video): ReactElement {
   return (
     <ColumnFrame
-      app={video}
+      app={app}
       start={start}
       onShortcut={() => undefined}
       sheet={[false, () => undefined]}
@@ -106,5 +113,58 @@ describe("the app stage's title", () => {
   it("shows no title when the frame sits under a screen that has its own", () => {
     render(withClient(columnFrame(false), video, null))
     expect(screen.queryAllByRole("heading", { level: 1 })).toEqual([])
+  })
+})
+
+function titleName(): HTMLElement {
+  const shown = document.querySelector<HTMLElement>(
+    "h1 [data-slot='app-title-name']"
+  )
+  if (shown === null) {
+    throw new Error("the title sets no name of its own")
+  }
+  return shown
+}
+
+function cutToRoom(text: number, room: number): void {
+  const shown = titleName()
+  Object.defineProperty(shown, "scrollWidth", { value: text })
+  Object.defineProperty(shown, "clientWidth", { value: room })
+}
+
+function tipWords(): string | null {
+  return (
+    document.querySelector("[data-slot='tooltip-content']")?.textContent ?? null
+  )
+}
+
+describe("a featured app's title in a stage row too narrow for it", () => {
+  it("sets the name in its own one-line box cut at its end, and the Featured badge beside it, outside the cut", () => {
+    render(withClient(columnFrame(undefined, motion), motion, null))
+    const name = titleName()
+    expect(name.textContent).toBe(appName(motion))
+    expect(name.className.split(" ")).toEqual(
+      expect.arrayContaining(["min-w-0", "truncate"])
+    )
+    const badge = document.querySelector<HTMLElement>(
+      "h1 [data-slot='badge'][data-kind='featured']"
+    )
+    expect(badge?.textContent).toBe(t("shell.nav.featured"))
+    expect(badge?.parentElement?.getAttribute("data-slot")).toBe("app-title")
+    expect(name.contains(badge ?? null)).toBe(false)
+  })
+
+  it("shows the whole name in a tooltip when the row cuts it", async () => {
+    render(withClient(columnFrame(undefined, motion), motion, null))
+    cutToRoom(120, 40)
+    fireEvent.focus(titleName())
+    await waitFor(() => expect(tipWords()).toBe(appName(motion)))
+  })
+
+  it("control: shows no tooltip while the whole name fits", () => {
+    render(withClient(columnFrame(undefined, motion), motion, null))
+    cutToRoom(60, 120)
+    fireEvent.focus(titleName())
+    expect(tipWords()).toBeNull()
   })
 })
