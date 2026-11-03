@@ -26,10 +26,10 @@ describe("a Video run of the LTX 2.5 graph on the demo engine", () => {
     expect(run.inputs).toMatchObject({
       model: "ltx-2-5",
       length: 5,
-      cameraMove: "auto",
       resolution: "480p",
       sound: "on",
     })
+    expect(run.inputs).not.toHaveProperty("cameraMove")
     await gateway.drive(run.id)
     const done = gateway.runs.stored.get(run.id)?.toRecord()
     expect(done?.status).toBe("done")
@@ -41,7 +41,7 @@ describe("a Video run of the LTX 2.5 graph on the demo engine", () => {
     expect(output?.width).toBeGreaterThan(output?.height ?? Infinity)
   })
 
-  it("keeps the start frame, the move and the seed in the run record", async () => {
+  it("keeps the start frame and the seed in the run record", async () => {
     const gateway = demoGateway()
     const frame = assetIdFormat.parse(crypto.randomUUID())
     const { run } = await gateway.startVideo({
@@ -50,7 +50,6 @@ describe("a Video run of the LTX 2.5 graph on the demo engine", () => {
       startFrame: [frame],
       resolution: "720p",
       length: 3,
-      cameraMove: "push-in",
       seed: 77,
     })
     await gateway.drive(run.id)
@@ -60,7 +59,6 @@ describe("a Video run of the LTX 2.5 graph on the demo engine", () => {
     expect(done?.inputs).toMatchObject({
       model: "ltx-2-5",
       length: 3,
-      cameraMove: "push-in",
       startFrame: [frame],
     })
   })
@@ -122,7 +120,7 @@ describe("a Video run of the LTX 2.5 graph on the demo engine", () => {
   it.each([
     { prompt: "   ", model: "ltx-2-5" },
     { prompt: "a cat", model: "ltx-2-5", length: 6 },
-    { prompt: "a cat", model: "ltx-2-5", cameraMove: "orbit" },
+    { prompt: "a cat", model: "ltx-2-5", cameraMove: "push-in" },
     { prompt: "a cat", model: "wan-2-2" },
     {
       prompt: "a cat",

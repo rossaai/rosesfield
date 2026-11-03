@@ -49,14 +49,12 @@ export function VideoSettings({
   form,
   fields,
   lastSeed,
-  placed,
   count = null,
 }: {
   app: AppListing
   form: AppForm
   fields: VideoFields | null
   lastSeed: number | null
-  placed: readonly string[]
   count?: ReactNode
 }): ReactNode {
   if (fields === null) {
@@ -67,7 +65,6 @@ export function VideoSettings({
         lastSeed={lastSeed}
         plan={appSettingsPlan(appliedApp(app, form.values.inputs), [
           soundInput,
-          ...placed,
         ])}
       />
     )

@@ -10,6 +10,7 @@ import {
   shotSecondsOf,
 } from "#remake/shot-plan"
 import { app as videoApp } from "#video/app"
+import { withCameraWords } from "#video/camera-moves"
 import { defaultModel as rebuildModel } from "#video/video-models"
 
 export type RemakeQuality = "draft" | "final"
@@ -125,9 +126,11 @@ function rebuilt(input: ShotRequestInput): Routed {
     app: "video",
     binding: videoApp.engine,
     inputs: {
-      prompt: wordsOf(input.shot, input.instructions),
+      prompt: withCameraWords(
+        wordsOf(input.shot, input.instructions),
+        input.shot.cameraMove
+      ),
       length: rebuildLengthOf(input.shot),
-      cameraMove: input.shot.cameraMove ?? "auto",
       ...rebuildVideo[input.quality],
     },
   }

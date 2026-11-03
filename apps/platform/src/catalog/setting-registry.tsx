@@ -89,7 +89,6 @@ const formatEntries: readonly Entry[] = [
 
 const contentEntries: readonly Entry[] = [
   ["movement", Move],
-  ["cameraMove", Move],
   ["camera", Camera],
   ["lens", Aperture],
   ["focus", Focus],

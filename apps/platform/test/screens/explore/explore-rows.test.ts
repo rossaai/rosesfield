@@ -1,5 +1,5 @@
-import { type Run, run } from "@rosesfield/contract"
-import { describe, expect, it } from "vitest"
+import { type AppListing, type Run, run } from "@rosesfield/contract"
+import { describe, expect, it, vi } from "vitest"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import {
   appRows,
@@ -66,6 +66,41 @@ function moveOf(cameraMove: string): VisualEntry {
   return entryOf({ appId: "video", inputs: { cameraMove } }, "video")
 }
 
+function exampleOf(example: string): VisualEntry {
+  return entryOf({ appId: "motion", inputs: { example } }, "video")
+}
+
+const motionExamples = vi.hoisted(() => [
+  "grab-and-run",
+  "melt-away",
+  "grow-giant",
+])
+
+vi.mock("@/catalog/catalog-apps", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@/catalog/catalog-apps")>()
+  const withExamples = (app: AppListing): AppListing => ({
+    ...app,
+    inputs: app.inputs.map((input) =>
+      input.type === "choice" && input.name === "example"
+        ? {
+            ...input,
+            options: ["own", ...motionExamples].map((value) => ({
+              value,
+              labelKey: "motion.example.own",
+            })),
+          }
+        : input
+    ),
+  })
+  return {
+    ...real,
+    findCatalogApp: (id: string) => {
+      const app = real.findCatalogApp(id)
+      return app !== null && id === "motion" ? withExamples(app) : app
+    },
+  }
+})
+
 describe("Explore's rows", () => {
   it("keep image and video results with a shape, and leave audio out", () => {
     const image = entryOf({})
@@ -103,31 +138,39 @@ describe("Explore's rows", () => {
     expect(modelRows(entries)).toHaveLength(rowLimit)
   })
 
-  it("turn an app's camera moves into presets, one tile per move", () => {
-    const video = findCatalogApp("video")
+  it("turn Motion's examples into presets, one tile per example", () => {
+    const motion = findCatalogApp("motion")
+    const [first = "", second = ""] = motionExamples
     const entries = [
-      moveOf("push-in"),
-      moveOf("push-in"),
-      moveOf("pull-out"),
-      moveOf("auto"),
+      exampleOf(first),
+      exampleOf(first),
+      exampleOf(second),
+      exampleOf("own"),
     ]
-    const presets = video === null ? [] : presetsOf(video, entries)
+    const presets = motion === null ? [] : presetsOf(motion, entries)
 
     expect(presets.map((preset) => preset.key)).toEqual([
-      "video-push-in",
-      "video-pull-out",
+      `motion-${first}`,
+      `motion-${second}`,
     ])
-    expect(presets[0]?.name).toBe("Push in")
     expect(presets[0]?.entry).toBe(entries[0])
   })
 
   it("give an app with presets a preset row, others a result row", () => {
-    const moves = ["push-in", "pull-out", "static"].map(moveOf)
+    const examples = motionExamples.slice(0, rowFloor).map(exampleOf)
     const images = Array.from({ length: rowFloor }, () => entryOf({}))
-    const rows = appRows([...moves, ...images])
+    const rows = appRows([...examples, ...images])
 
     expect(rows.map((row) => row.kind).sort()).toEqual(["app", "presets"])
     expect(appRows(images.slice(0, rowFloor - 1))).toEqual([])
+  })
+
+  it("give old Video runs that carry a camera move a result row, since Video has no camera move card", () => {
+    const video = findCatalogApp("video")
+    const moves = ["push-in", "pull-out", "static"].map(moveOf)
+
+    expect(video === null ? null : presetsOf(video, moves)).toEqual([])
+    expect(appRows(moves).map((row) => row.kind)).toEqual(["app"])
   })
 
   it("put one card per app in the promo row", () => {

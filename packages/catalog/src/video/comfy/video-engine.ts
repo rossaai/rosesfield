@@ -1,11 +1,6 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectBinding } from "@rosesfield/generation/bindings"
 import {
-  cameraMoves,
-  cameraWordsKeyOf,
-  cameraWordsSeparator,
-} from "#video/camera-moves"
-import {
   type FrameSize,
   framesFor,
   ltxSizes,
@@ -19,7 +14,6 @@ import {
   withoutLastFrame,
   withoutSound,
 } from "#video/comfy/video-workflows"
-import { videoCopy } from "#video/copy.en"
 import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 
 type Sound = "on" | "off"
@@ -50,36 +44,9 @@ function sizeMap(resolution: VideoResolution, side: Side): ValueMap {
   )
 }
 
-export function cameraWordsOf(move: string): string {
-  if (move === "auto") {
-    return ""
-  }
-  const row = cameraMoves.find((one) => one.value === move)
-  const words =
-    row === undefined || row.value === "auto"
-      ? undefined
-      : videoCopy[cameraWordsKeyOf(row.value)]
-  return words === undefined ? "" : words
-}
-
-function sentenceMap(): ValueMap {
-  return Object.fromEntries(
-    cameraMoves.map((move) => {
-      const words = cameraWordsOf(move.value)
-      return [move.value, words === "" ? "" : `${cameraWordsSeparator}${words}`]
-    })
-  )
-}
-
 function ltxBindings(resolution: VideoResolution): WorkflowValueBinding[] {
   return [
     { from: "input", name: "prompt", to: "prompt" },
-    {
-      from: "input",
-      name: "cameraMove",
-      map: sentenceMap(),
-      to: "cameraMove",
-    },
     ...sides.map(
       (side): WorkflowValueBinding => ({
         from: "aspectRatio",

@@ -49,11 +49,6 @@ export const videoCopy: Readonly<Record<string, string>> = {
   "video.well.last": "Last frame",
   "video.well.none":
     "This model takes no image here. Pick another model to add one.",
-  "video.preset.title": "Camera move",
-  "video.preset.change": "Change",
-  "video.preset.none": "None",
-  "video.preset.pick": "Pick a camera move",
-  "video.preset.words": "Added to your prompt: {words}",
   "video.sound.always": "This model always makes sound.",
   "video.settings.more": "More settings",
 }

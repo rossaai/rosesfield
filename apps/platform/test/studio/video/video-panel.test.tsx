@@ -92,7 +92,6 @@ describe("the column's settings", () => {
           form={form}
           fields={fields}
           lastSeed={null}
-          placed={[]}
         />
       </TooltipProvider>
     )
@@ -155,14 +154,11 @@ function screenOf(chosen: CatalogModel | null): VideoScreen {
     tab: "references",
     setTab: () => undefined,
     fields: fieldsOfModel(chosen),
-    isGraph: chosen === null,
-    presets: [],
+    isGraph: chosen === null || chosen.form === null,
     prompt: {
       name: "prompt",
       typed: "",
-      move: null,
       setTyped: () => undefined,
-      setMove: () => undefined,
     },
     fillFromRun: () => undefined,
   }
@@ -197,6 +193,36 @@ describe("Video's column", () => {
       expect(
         screen.queryByRole("button", { name: t("bar.elements") })
       ).toBeNull()
+      cleanup()
+    }
+  })
+})
+
+const ltx: CatalogModel = {
+  id: "ltx-2-5",
+  kind: "graph",
+  maker: "comfy-cloud",
+  name: "LTX 2.5",
+  nameKey: null,
+  task: "text-to-video",
+  tags: [],
+  form: null,
+}
+
+describe("Video's column with no camera move", () => {
+  it("draws no camera move card and no camera move setting, so a move is written in the prompt", () => {
+    for (const chosen of [ltx, seedance]) {
+      showColumn(<VideoPanel app={video} screen={screenOf(chosen)} />)
+      expect(
+        document.querySelector("[data-slot='composer-attachments-tiles']")
+      ).toBeNull()
+      expect(screen.queryByText("Camera move")).toBeNull()
+      expect(screen.queryByRole("combobox", { name: "Camera move" })).toBeNull()
+      expect(
+        screen.getByRole("textbox", {
+          name: tCatalog("video.input.prompt.label"),
+        })
+      ).toBeTruthy()
       cleanup()
     }
   })

@@ -168,7 +168,7 @@ describe("the create gallery", () => {
 })
 
 describe("the create gallery's column", () => {
-  it("shows the live Video column: its three mode tabs, the start frame, no switch to another app, one full-width model chip and the settings as rows", () => {
+  it("shows the live Video column: its three mode tabs, no camera move card, no switch to another app, one full-width model chip and the settings as rows", () => {
     const entry = referenceCreateEntries.find(
       (one) => one.id === "ref-input-panel"
     )
@@ -197,11 +197,9 @@ describe("the create gallery's column", () => {
       throw new Error("no parts")
     }
     expect(parts.querySelector("[data-slot='make-switch']")).toBeNull()
-    const frame = parts.querySelector(
-      "[data-slot='composer-attachments-tiles']"
-    )
-    expect(frame?.textContent).toContain(tCatalog("video.preset.title"))
-    expect(parts.firstElementChild?.contains(frame ?? null)).toBe(true)
+    expect(
+      parts.querySelector("[data-slot='composer-attachments-tiles']")
+    ).toBeNull()
     expect(parts.querySelector("[data-slot='setting-tiles']")).toBeNull()
     const chips = parts.querySelectorAll("[data-slot='model-row']")
     expect([...chips].map((chip) => chip.getAttribute("data-width"))).toEqual([

@@ -164,8 +164,9 @@ describe("the engine requests Remake sends to Comfy for each shot", () => {
     expect(workflow).toMatchObject({
       "900": {
         inputs: {
-          string_a: "A wet street at night with lit shop windows. Warm light.",
-          string_b: "\nThe camera moves slowly forward, toward the subject.",
+          string_a:
+            "A wet street at night with lit shop windows. Warm light.\nThe camera moves slowly forward, toward the subject.",
+          string_b: "",
         },
       },
       "356": { inputs: { width: 384, height: 672, length: 73 } },

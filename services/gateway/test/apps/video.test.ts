@@ -94,7 +94,6 @@ describe("the video app through the gateway on the demo engine", () => {
           prompt: "a paper boat drifts across a pond",
           model: "ltx-2-5",
           startFrame: [frame],
-          cameraMove: "push-in",
           length: 3,
         },
         aspectRatio: "9:16",
@@ -108,7 +107,6 @@ describe("the video app through the gateway on the demo engine", () => {
       inputs: {
         startFrame: [frame],
         model: "ltx-2-5",
-        cameraMove: "push-in",
         length: 3,
         resolution: "480p",
         sound: "on",

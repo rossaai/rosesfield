@@ -1,3 +1,5 @@
+import { videoCopy } from "#video/copy.en"
+
 export type CameraMove =
   | "auto"
   | "static"
@@ -28,4 +30,16 @@ export const cameraWordsSeparator = "\n"
 
 export function cameraWordsKeyOf(move: string): string {
   return `video.cameraMove.${move}.words`
+}
+
+export function cameraWordsOf(move: string): string {
+  const row = cameraMoves.find((one) => one.value === move)
+  return row === undefined || row.value === "auto"
+    ? ""
+    : (videoCopy[cameraWordsKeyOf(row.value)] ?? "")
+}
+
+export function withCameraWords(prompt: string, move: string | null): string {
+  const words = move === null ? "" : cameraWordsOf(move)
+  return words === "" ? prompt : `${prompt}${cameraWordsSeparator}${words}`
 }
