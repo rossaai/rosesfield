@@ -9,6 +9,10 @@ export const COMPOSER = {
       values: ["rest", "reply"],
       default: "rest",
     },
+    form: {
+      values: ["full", "line"],
+      default: "full",
+    },
   },
   states: [
     "rest",
@@ -167,3 +171,4 @@ export const COMPOSER = {
 export type ComposerSlot = (typeof COMPOSER.slots)[number]
 export type ComposerState = (typeof COMPOSER.states)[number]
 export type ComposerMode = (typeof COMPOSER.variants.mode.values)[number]
+export type ComposerForm = (typeof COMPOSER.variants.form.values)[number]

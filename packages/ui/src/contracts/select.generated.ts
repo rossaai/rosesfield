@@ -6,7 +6,7 @@ export const SELECT = {
   slots: ["value", "chevron", "options"],
   variants: {
     form: {
-      values: ["value", "chip"],
+      values: ["value", "chip", "inline"],
       default: "value",
     },
     ground: {
